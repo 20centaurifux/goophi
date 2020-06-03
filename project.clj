@@ -3,7 +3,10 @@
   :url "http://example.com/FIXME"
   :license {:name "AGPLv3"
             :url "https://www.gnu.org/licenses/agpl-3.0"}
-  :dependencies [[org.clojure/clojure "1.10.1"]]
+  :dependencies [[org.clojure/clojure "1.10.1"]
+                 [instaparse "1.4.10"]
+                 [aleph "0.4.7-alpha5"]
+                 [org.clojure/core.async "1.2.603"]]
   :main ^:skip-aot goophi.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}}
