@@ -2,20 +2,33 @@
   (:require [manifold.stream :as s]
             [aleph.tcp :as tcp]
             [clojure.core.async :as async]
-            [goophi.core :as core]))
+            [goophi.core :as core]
+            [goophi.fs :as fs])
+  (:import [java.io InputStream ByteArrayInputStream]))
+
+(def ^:private base-path "/home/sf/tmp/gopher")
+
+(defn- ->stream
+  [val]
+  (cond
+    (instance? InputStream val) val
+    (instance? String val) (->stream (.getBytes val))
+    (bytes? val) (ByteArrayInputStream. val)
+    :else nil))
 
 (defn- process-request
   [data]
   (let [request (String. (byte-array data))]
     (try
       (if-let [[selector query] (core/parse-request request)]
-        (str (core/->Item "i" "hello world" "null" "(FALSE)" 0))
+        (let [response (fs/get-contents base-path selector)]
+          (->stream response))
         "Bad Request.")
       (catch Exception e (str "Internal Server Error: " (.getMessage e))))))
 
 (defn- split-bytes
   [data separator]
-  (split-with (partial not=  (byte separator)) data))
+  (split-with (partial not= (byte separator)) data))
 
 (defn- exceeds-maximum?
   [data]

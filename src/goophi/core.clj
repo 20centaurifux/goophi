@@ -42,3 +42,8 @@
   "Constructs an information item."
   [text]
   (->Item "i" text "fake" "(NULL)" 0))
+
+(defn error
+  "Constructs an error item."
+  [text]
+  (->Item "3" text "fake" "(NULL)" 0))
