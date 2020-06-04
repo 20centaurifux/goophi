@@ -37,3 +37,8 @@
    (Item. type display-text selector hostname port))
   ([type display-text selector hostname]
    (Item. type display-text selector hostname 70)))
+
+(defn info
+  "Constructs an information item."
+  [text]
+  (->Item "i" text "fake" "(NULL)" 0))
