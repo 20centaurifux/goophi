@@ -90,3 +90,18 @@
        (when-let [match# (matches ~r# request#)]
          (let [~param-bindings# (take ~(count param-bindings#) (vals (:params match#)))
                ~req-bindings# (repeat ~(count req-bindings#) match#)] ~body)))))
+
+(defmacro defroutes
+  "Defines a set of routes.
+
+  Example:
+    (defroutes my-routes
+      (\"/products/:category/:id\"
+       [category id]
+       (get-product category id))
+
+      (\"/products/:category/search\"
+       [category :as req]
+       (search-products category (:query req)))"
+  [name & routes]
+  `(def ~name ~(mapv #(cons 'route %) routes)))
