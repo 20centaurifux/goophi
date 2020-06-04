@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [instaparse "1.4.10"]
                  [aleph "0.4.7-alpha5"]
-                 [org.clojure/core.async "1.2.603"]]
+                 [org.clojure/core.async "1.2.603"]
+                 [org.clojure/core.memoize "1.0.236"]]
   :main ^:skip-aot goophi.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}}
