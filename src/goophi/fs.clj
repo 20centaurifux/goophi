@@ -41,13 +41,13 @@
       "9"))
 
 (defn- map-file-type
-  [file]
+  [^java.io.File file]
   (if (.isFile file)
     (guess-file-type (.getName file))
     "1"))
 
 (defn file->item
-  [file]
+  [^java.io.File file]
   (config/bind [^:required hostname [:network :hostname]
                 ^{:default 70} port [:network :port]]
     (core/->Item (map-file-type file)
@@ -57,7 +57,7 @@
                  port)))
 
 (defn- list-directory
-  [dir]
+  [^java.io.File dir]
   (->> (.listFiles dir)
        rest
        (map (comp str file->item))
@@ -98,10 +98,10 @@
       (list-directory dir))))
 
 (defn- read-file
-  [file]
+  [^java.io.File file]
   (FileInputStream. file))
 
-(defn- ->Path
+(defn- ^java.nio.file.Path ->Path
   [path]
   (.normalize
     (-> (.toURI (io/file path))

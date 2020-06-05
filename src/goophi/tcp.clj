@@ -7,11 +7,11 @@
             [goophi.config :as config])
   (:import [java.io InputStream ByteArrayInputStream]))
 
-(defn- response->stream
+(defn- ^InputStream response->stream
   [val]
   (cond
     (instance? InputStream val) val
-    (instance? String val) (response->stream (.getBytes val))
+    (instance? String val) (response->stream (.getBytes ^String val))
     (core/Item? val) (response->stream (str val))
     (bytes? val) (ByteArrayInputStream. val)))
 
@@ -57,7 +57,7 @@
                    apply-handler
                    (put-response! out))
               (recur buffer'))))))
-    (.close out)))
+    (s/close! out)))
 
 (defn gopher-handler
   [s info]
