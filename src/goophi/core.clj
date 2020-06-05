@@ -31,6 +31,11 @@
   (toString [item]
     (str (item->str item) "\r\n")))
 
+(defn Item?
+  "Tests if x is an Item."
+  [x]
+  (instance? Item x))
+
 (defn ->Item
   "Constructs a gopher item. Items can be serialized with str."
   ([type display-text selector hostname port]
