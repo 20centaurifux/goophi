@@ -1,5 +1,6 @@
 {
  :network {:address "127.0.0.1"
-           :port 70
+           :port 1337
            :hostname "localhost"}
+ :runtime {:document-path "./pub"}
 }
