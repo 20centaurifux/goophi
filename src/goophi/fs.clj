@@ -13,10 +13,18 @@
       last
       s/lower-case))
 
+(defn- file-extension-map
+  []
+  (config/bind [^{:default {}} extensions [:file-extensions]]
+    (-> extensions
+        (update "g" #(conj % "gif"))
+        (update "0" #(conj % "xml" "json")))))
+
 (defn- map-extension
   [filename]
-  (when (= "gif" (file-extension filename))
-    "g"))
+  (let [ext (file-extension filename)]
+    (some (fn [[t e]] (when (some #(= ext %) e) t))
+          (file-extension-map))))
 
 (defn- map-mime
   [filename]
@@ -50,7 +58,7 @@
 
 (defn- list-directory
   [dir]
-  (->> (file-seq dir)
+  (->> (.listFiles dir)
        rest
        (map (comp str file->item))
        s/join))
@@ -96,8 +104,7 @@
 (defn- ->Path
   [path]
   (.normalize
-    (-> (str "file://" path) 
-        (java.net.URI.)
+    (-> (.toURI (io/file path))
         Paths/get)))
 
 (defn- is-child-path?
