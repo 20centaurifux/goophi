@@ -4,6 +4,7 @@
             [clojure.core.async :as async]
             [goophi.core :as core]
             [goophi.fs :as fs]
+            [goophi.redirect :as r]
             [goophi.config :as config])
   (:import [java.io InputStream ByteArrayInputStream]))
 
@@ -31,7 +32,9 @@
     (let [request (String. (byte-array data))]
       (try
         (if-let [[selector query] (core/parse-request request)]
-          (fs/get-contents document-path selector)
+          (if-let [match (re-matches #"^URL:(.*)" selector)]
+            (r/redirect (second match))
+            (fs/get-contents document-path selector))
           (core/error "Bad Request."))
         (catch Exception e (core/error (str "Internal Server Error: " (.getMessage e))))))))
 
