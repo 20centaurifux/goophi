@@ -51,10 +51,10 @@
   (config/bind [^:required hostname [:network :hostname]
                 ^{:default 70} port [:network :port]]
     (core/->Item (map-file-type file)
-                 (.getName file)
-                 (str "/" (.getName file))
-                 hostname
-                 port)))
+    (.getName file)
+    (str "/" (.getName file))
+    hostname
+    port)))
 
 (defn- list-directory
   [^java.io.File dir]
@@ -104,8 +104,8 @@
 (defn- ^java.nio.file.Path ->Path
   [path]
   (.normalize
-    (-> (.toURI (io/file path))
-        Paths/get)))
+   (-> (.toURI (io/file path))
+       Paths/get)))
 
 (defn- is-child-path?
   [parent child]
