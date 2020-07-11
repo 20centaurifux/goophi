@@ -129,4 +129,4 @@
       (cond
         (.isDirectory file) (read-directory file)
         (.isFile file) (read-file file))
-      (core/error "Access denied."))))
+      (core/info "Access denied."))))
