@@ -102,6 +102,6 @@
 
       (\"/products/:category/search\"
        [category :as req]
-       (search-products category (:query req)))"
+       (search-products category (:query req))))"
   [name & routes]
   `(def ~name ~(mapv #(cons `route %) routes)))
