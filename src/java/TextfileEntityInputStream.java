@@ -79,7 +79,7 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 			out.reset();
 
-			int bytesLeft = buffer.length - dst.length;
+			int bytesLeft = buffer.length - read;
 
 			out.write(buffer, read, bytesLeft);
 		}
@@ -109,7 +109,7 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 			out.reset();
 
-			int bytesLeft = buffer.length - dst.length;
+			int bytesLeft = buffer.length - read;
 
 			out.write(buffer, read, bytesLeft);
 		}
