@@ -48,4 +48,4 @@
   `(let* ~(vec (mapcat #(list (first %)
                               (lookup (meta (first %)) (second %)))
                        (partition 2 bindings)))
-     ~@body))
+         ~@body))

@@ -16,9 +16,9 @@
 (defn- file-extension-map
   []
   (config/bind [^{:default {}} extensions [:file-extensions]]
-    (-> extensions
-        (update "g" #(conj % "gif"))
-        (update "0" #(conj % "xml" "json")))))
+               (-> extensions
+                   (update "g" #(conj % "gif"))
+                   (update "0" #(conj % "xml" "json")))))
 
 (defn- map-extension
   [filename]
@@ -50,11 +50,11 @@
   [^java.io.File file]
   (config/bind [^:required hostname [:network :hostname]
                 ^{:default 70} port [:network :port]]
-    (core/->Item (map-file-type file)
-    (.getName file)
-    (str "/" (.getName file))
-    hostname
-    port)))
+               (core/->Item (map-file-type file)
+                            (.getName file)
+                            (str "/" (.getName file))
+                            hostname
+                            port)))
 
 (defn- list-directory
   [^java.io.File dir]
@@ -67,10 +67,10 @@
   [text]
   (config/bind [^:required hostname [:network :hostname]
                 ^{:default 70} port [:network :port]]
-  (cond
-    (= text "@hostname") hostname
-    (= text "@port") port
-    :else text)))
+               (cond
+                 (= text "@hostname") hostname
+                 (= text "@port") port
+                 :else text)))
 
 (defn- transform-gophermap-parts
   [parts]
