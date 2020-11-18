@@ -1,6 +1,7 @@
 (ns goophi.fs
   (:require [goophi.core :as core]
             [goophi.config :as config]
+            [goophi.response :as response]
             [clojure.java.io :as io]
             [clojure.string :as s])
   (:import [java.net URLConnection]
@@ -50,18 +51,18 @@
   [^java.io.File file]
   (config/bind [^:required hostname [:network :hostname]
                 ^{:default 70} port [:network :port]]
-               (core/->Item (map-file-type file)
-                            (.getName file)
-                            (str "/" (.getName file))
-                            hostname
-                            port)))
+    (core/->Item (map-file-type file)
+                 (.getName file)
+                 (str "/" (.getName file))
+                 hostname
+                 port)))
 
 (defn- list-directory
   [^java.io.File dir]
   (->> (.listFiles dir)
-       rest
        (map (comp str file->item))
-       s/join))
+       s/join
+       response/menu-entity))
 
 (defn- replace-keyword
   [text]
@@ -88,7 +89,8 @@
   (with-open [rdr (io/reader file)]
     (->> (line-seq rdr)
          (map (comp str convert-line))
-         (s/join))))
+         s/join
+         response/menu-entity)))
 
 (defn- read-directory
   [dir]
@@ -99,7 +101,10 @@
 
 (defn- read-file
   [^java.io.File file]
-  (FileInputStream. file))
+  (let [in (FileInputStream. file)]
+    (if (= "0" (guess-file-type (.getPath file)))
+      (response/text-file-entity in)
+      (response/binary-entity in))))
 
 (defn- ^java.nio.file.Path ->Path
   [path]
@@ -129,4 +134,4 @@
       (cond
         (.isDirectory file) (read-directory file)
         (.isFile file) (read-file file))
-      (core/info "Access denied."))))
+      (response/menu-entity (core/info "Access denied.")))))

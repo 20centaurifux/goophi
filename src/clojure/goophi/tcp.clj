@@ -4,17 +4,15 @@
             [clojure.core.async :as async]
             [goophi.core :as core]
             [goophi.config :as config]
-            [goophi.response :refer [take! ->text TextFactory]])
+            [goophi.response :refer [take! menu-entity]]
+            [goophi.routing :refer [defroutes]]
+            [goophi.fs :refer [get-contents]])
   (:import [java.io InputStream ByteArrayInputStream]
            [goophi.core Item]))
 
 (defonce ^:private max-request 128)
 (defonce ^:private transfer-chunk-size 8192)
 (defonce ^:private timeout-millis 5000)
-
-(extend Item
-  TextFactory
-  {:->text #(->text (str %))})
 
 (defn- put-response!
   [in out]
@@ -25,22 +23,18 @@
           @(s/put! out (byte-array (take available buffer)))
           (recur buffer))))))
 
-(defn- apply-handler
-  [data]
-  (config/bind [^:required document-path [:runtime :document-path]]
-               (let [request (String. (byte-array data))]
-                 (try
-                   (->text (core/info "hello world"))
-                   (catch Exception e (core/info (str "Internal Server Error: " (.getMessage e))))))))
+(defn- route-request
+  [routes request]
+  (try
+    (if-let [response (some #(% request) routes)]
+      response
+      (menu-entity (core/info "Not found.")))
+    (catch Exception e (menu-entity (core/info "Internal Server Error.")))))
 
 (defn- request-str
   [data]
   (let [text (String. (byte-array data))]
     (clojure.string/trimr text)))
-
-(defn- route
-  [routes request]
-  (->text (core/info request)))
 
 (defn- split-bytes
   [data separator]
@@ -58,23 +52,17 @@
         (let [[l r] (split-bytes data \newline)
               buffer' (concat buffer l)]
           (if (exceeds-maximum? buffer')
-            (s/put! out (->text (core/info "Request too long.")))
+            (s/put! out (menu-entity (core/info "Request too long.")))
             (if-not (empty? r)
-              (put-response! (route routes (request-str l)) out)
+              (put-response! (route-request routes (request-str l)) out)
               (recur buffer'))))
-        (s/put! out (->text (core/info "Connection timeout.")))))
+        (s/put! out (menu-entity (core/info "Connection timeout.")))))
     (s/close! out)))
 
-(defn gopher-handler
-  [s info]
-  (let [in (async/chan)]
-    (handle-connection in s [])
-    (s/connect s in)))
-
-(when-let [s' (resolve 's)]
-  (.close @s'))
-
-(def s
-  (tcp/start-server
-   gopher-handler
-   {:port 1337}))
+(defn ->gopher-handler
+  "Creates an Aleph handler."
+  [routes]
+  (fn [s info]
+    (let [in (async/chan)]
+      (handle-connection in s routes)
+      (s/connect s in))))
