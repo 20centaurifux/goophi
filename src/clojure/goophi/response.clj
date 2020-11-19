@@ -7,6 +7,36 @@
   "Response data source."
   (take! [in out]))
 
+(defn Response?
+  "Return true if x is a Response."
+  [x]
+  (satisfies? Response x))
+
+(defn- dump
+  [response transform & {:keys [buffer-size] :or {buffer-size 8192}}]
+  (loop [buffer (byte-array buffer-size)]
+    (let [available (take! response buffer)]
+      (when (>= available 0)
+        (-> (take available buffer)
+            byte-array
+            transform
+            print)
+        (recur buffer)))))
+
+(defn dumps
+  "Reads response as string & prints it to *out*."
+  [response]
+  (dump response slurp))
+
+(defn dumpx
+  "Reads response & prints hexdump to *out*."
+  [response & {:keys [columns] :or {columns 16}}]
+  (dump response
+        #(str
+           (clojure.string/join " " (map (partial format "0x%02x") %))
+           \newline)
+        :buffer-size columns))
+
 (extend java.io.InputStream
   Response
   {:take! #(.read % %2)})
