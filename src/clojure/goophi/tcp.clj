@@ -3,10 +3,7 @@
             [aleph.tcp :as tcp]
             [clojure.core.async :as async]
             [goophi.core :as core]
-            [goophi.config :as config]
-            [goophi.response :refer [take! menu-entity]]
-            [goophi.routing :refer [defroutes]]
-            [goophi.fs :refer [get-contents]])
+            [goophi.response :refer [take! menu-entity]])
   (:import [java.io InputStream ByteArrayInputStream]
            [goophi.core Item]))
 

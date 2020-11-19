@@ -1,12 +1,12 @@
 (defproject goophi "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Gopher protocol library."
+  :url "https://github.com/20centaurifux/goophi"
   :license {:name "AGPLv3"
             :url "https://www.gnu.org/licenses/agpl-3.0"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [instaparse "1.4.10"]
-                 [aleph "0.4.7-alpha5"]
-                 [org.clojure/core.async "1.2.603"]
+                 [aleph "0.4.7-alpha7"]
+                 [org.clojure/core.async "1.3.610"]
                  [org.clojure/core.memoize "1.0.236"]
                  [hiccup "1.0.5"]]
   :main ^:skip-aot goophi.core
