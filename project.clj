@@ -5,7 +5,6 @@
             :url "https://www.gnu.org/licenses/agpl-3.0"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [instaparse "1.4.10"]
-                 [aleph "0.4.7-alpha7"]
                  [org.clojure/core.async "1.3.610"]
                  [org.clojure/core.memoize "1.0.236"]
                  [hiccup "1.0.5"]]

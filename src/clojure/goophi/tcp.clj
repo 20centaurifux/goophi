@@ -1,6 +1,5 @@
 (ns goophi.tcp
   (:require [manifold.stream :as s]
-            [aleph.tcp :as tcp]
             [clojure.core.async :as async]
             [goophi.core :as core]
             [goophi.response :refer [take! menu-entity]])

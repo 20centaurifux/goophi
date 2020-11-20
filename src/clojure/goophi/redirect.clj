@@ -15,4 +15,12 @@
 
 (defn redirect
   [url]
-  (page url))
+  (java.io.ByteArrayInputStream. (.getBytes (page url))))
+
+(defn selector->url
+  [selector]
+  (let [url (subs selector 4)]
+    (when-not (clojure.string/blank? url)
+      (try
+        (clojure.java.io/as-url url)
+        (catch Exception _)))))

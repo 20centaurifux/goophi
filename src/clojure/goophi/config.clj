@@ -6,7 +6,7 @@
 (def ^:private timeout 30000)
 
 (def ^:private load-config
-  (memo/ttl #(-> (slurp "config.edn")
+  (memo/ttl #(-> (slurp "goophi.edn")
                  edn/read-string)
             :ttl/threshold timeout))
 
@@ -42,7 +42,7 @@
       (format \"%s:%d\" addr port))
 
   Configuration is loaded from an EDN formatted file named
-  \"config.edn\" which must be located in the working directory of
+  \"goophi.edn\" which must be located in the working directory of
   the process. File content is cached."
   [bindings & body]
   `(let* ~(vec (mapcat #(list (first %)
