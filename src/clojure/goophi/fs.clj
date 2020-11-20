@@ -1,7 +1,7 @@
 (ns goophi.fs
   (:require [goophi.core :as core]
-            [goophi.config :as config]
             [goophi.response :as response]
+            [confick.core :as config]
             [clojure.java.io :as io]
             [clojure.string :as s])
   (:import [java.net URLConnection]

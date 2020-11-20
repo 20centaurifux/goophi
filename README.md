@@ -7,8 +7,6 @@ gooφ is a Gopher implementation written in Clojure. It comes with the following
 * built-in HTTP redirection module
 * [Aleph](https://github.com/aleph-io/aleph) compatibility
 
-## Quick overview
-
 ### Routing & entities
 
 A Gopher request is represented as a map. It has the following keys:
@@ -53,9 +51,13 @@ gooφ has a built-in filesystem module with gophermap support.
 	-> -(((---(((--------
 	-> .
 
-### redirect module
+Hostname and port are specified in the configuration file (config.edn).
+gooφ uses [confick](https://github.com/20centaurifux/confick) for configuration
+management.
 
-URLs can be displayed on an HTML redirection page.
+### redirection module
+
+URLs are displayed on an HTML redirection page.
 
 	(require '[goophi.redirect :as html])
 

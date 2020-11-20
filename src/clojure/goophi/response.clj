@@ -33,8 +33,8 @@
   [response & {:keys [columns] :or {columns 16}}]
   (dump response
         #(str
-           (clojure.string/join " " (map (partial format "0x%02x") %))
-           \newline)
+          (clojure.string/join " " (map (partial format "0x%02x") %))
+          \newline)
         :buffer-size columns))
 
 (extend java.io.InputStream

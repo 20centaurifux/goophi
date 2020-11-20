@@ -7,8 +7,8 @@
                  [instaparse "1.4.10"]
                  [org.clojure/core.async "1.3.610"]
                  [org.clojure/core.memoize "1.0.236"]
-                 [hiccup "1.0.5"]]
-  :main ^:skip-aot goophi.core
+                 [hiccup "1.0.5"]
+                 [zcfux/confick "0.1.0-SNAPSHOT"]]
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]
   :target-path "target/%s"
