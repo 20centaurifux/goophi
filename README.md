@@ -66,10 +66,10 @@ URLs are displayed on an HTML redirection page.
 	    "URL\\:*"
 	    [:as req]
 	    (if-let [url (html/selector->url (:path req))]
-	      (html/redirect (str (html/selector->url (:path req))))
-	    (res/menu-entity (c/info "Not found.")))))
+	      (html/redirect url)
+	      (res/menu-entity (c/info "Not found.")))))
 
-	(res/dumps (redirect-example "URL:https://www.gopherpedia.com"))
+	(res/dumps (redirect-example "URL:https://github.com/20centaurifux/goophi"))
 
 ### TCP
 
