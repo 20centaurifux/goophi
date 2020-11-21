@@ -7,6 +7,14 @@ gooφ is a Gopher implementation written in Clojure. It comes with the following
 * built-in HTTP redirection module
 * [Aleph](https://github.com/aleph-io/aleph) compatibility
 
+## Installation
+
+The library can be installed from Clojars using Leiningen:
+
+[![Clojars Project](http://clojars.org/zcfux/goophi/latest-version.svg)](https://clojars.org/zcfux/goophi)
+
+## Quick overview
+
 ### Routing & entities
 
 A Gopher request is represented as a map. It has the following keys:
