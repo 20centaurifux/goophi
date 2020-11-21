@@ -49,8 +49,8 @@
 
 (defn file->item
   [^java.io.File file]
-  (config/bind [^:required hostname [:network :hostname]
-                ^{:default 70} port [:network :port]]
+  (config/bind [^:required hostname [:goophi :hostname]
+                ^{:default 70} port [:goophi :port]]
     (core/->Item (map-file-type file)
                  (.getName file)
                  (str "/" (.getName file))
@@ -66,8 +66,8 @@
 
 (defn- replace-keyword
   [text]
-  (config/bind [^:required hostname [:network :hostname]
-                ^{:default 70} port [:network :port]]
+  (config/bind [^:required hostname [:goophi :hostname]
+                ^{:default 70} port [:goophi :port]]
                (cond
                  (= text "@hostname") hostname
                  (= text "@port") port
