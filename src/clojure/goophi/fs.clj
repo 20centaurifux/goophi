@@ -47,20 +47,27 @@
     (guess-file-type (.getName file))
     "1"))
 
+(defn ->selector
+  [parent filename]
+  (let [rtrimmed (s/replace parent #"/$" "")
+        selector (str rtrimmed "/" filename)]
+    (cond->> selector
+      (not (s/starts-with? selector "/")) (str "/"))))
+
 (defn file->item
-  [^java.io.File file]
+  [parent ^java.io.File file]
   (config/bind [^:required hostname [:goophi :hostname]
                 ^{:default 70} port [:goophi :port]]
     (core/->Item (map-file-type file)
                  (.getName file)
-                 (str "/" (.getName file))
+                 (->selector parent (.getName file))
                  hostname
                  port)))
 
 (defn- list-directory
-  [^java.io.File dir]
+  [selector ^java.io.File dir]
   (->> (.listFiles dir)
-       (map (comp str file->item))
+       (map #(str (file->item selector %)))
        s/join
        response/menu-entity))
 
@@ -93,11 +100,11 @@
          response/menu-entity)))
 
 (defn- read-directory
-  [dir]
+  [selector dir]
   (let [gophermap (io/file dir "gophermap")]
     (if (.exists gophermap)
       (read-gophermap gophermap)
-      (list-directory dir))))
+      (list-directory selector dir))))
 
 (defn- read-file
   [^java.io.File file]
@@ -132,6 +139,6 @@
   (let [file (io/file base-dir (normalize-relative-path path))]
     (if (is-child-path? base-dir (.getPath file))
       (cond
-        (.isDirectory file) (read-directory file)
+        (.isDirectory file) (read-directory (or path "") file)
         (.isFile file) (read-file file))
       (response/menu-entity (core/info "Access denied.")))))
