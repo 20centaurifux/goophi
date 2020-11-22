@@ -67,6 +67,7 @@
 (defn- list-directory
   [selector ^java.io.File dir]
   (->> (.listFiles dir)
+       sort
        (map #(str (file->item selector %)))
        s/join
        response/menu-entity))
