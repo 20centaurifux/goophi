@@ -16,7 +16,7 @@
 
 (defn- file-extension-map
   []
-  (config/bind [^{:default {}} extensions [:file-extensions]]
+  (config/bind [^{:default {}} extensions [:goophi :fs :file-extensions]]
                (-> extensions
                    (update "g" #(conj % "gif"))
                    (update "0" #(conj % "xml" "json")))))
