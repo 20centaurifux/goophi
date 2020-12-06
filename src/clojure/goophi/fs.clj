@@ -58,11 +58,11 @@
   [parent ^java.io.File file]
   (config/bind [^:required hostname [:goophi :hostname]
                 ^{:default 70} port [:goophi :port]]
-    (core/->Item (map-file-type file)
-                 (.getName file)
-                 (->selector parent (.getName file))
-                 hostname
-                 port)))
+               (core/->Item (map-file-type file)
+                            (.getName file)
+                            (->selector parent (.getName file))
+                            hostname
+                            port)))
 
 (defn- list-directory
   [selector ^java.io.File dir]
