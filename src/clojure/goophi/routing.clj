@@ -48,8 +48,9 @@
     (Pattern. tree regex params)))
 
 (defn matches
-  "Tests if request is matching pattern. Returns a map containing
-  path, query and matched parameters on success."
+  "Tests if request is matching the pattern associated to route.
+  Returns a map containing path, query and matched parameters on
+  success."
   [route request]
   (when-let [request' (parse-request request)]
     (when-let [match (re-matches (:regex route) (first request'))]

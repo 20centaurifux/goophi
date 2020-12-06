@@ -14,4 +14,6 @@
   :java-source-paths ["src/java"]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}}
-  :plugins [[lein-cljfmt "0.6.7"]])
+  :plugins [[lein-cljfmt "0.6.7"]
+            [lein-codox "0.10.7"]]
+  :codox {:output-path "./doc"})

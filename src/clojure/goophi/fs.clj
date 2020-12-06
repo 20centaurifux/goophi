@@ -47,14 +47,14 @@
     (guess-file-type (.getName file))
     "1"))
 
-(defn ->selector
+(defn- ->selector
   [parent filename]
   (let [rtrimmed (s/replace parent #"/$" "")
         selector (str rtrimmed "/" filename)]
     (cond->> selector
       (not (s/starts-with? selector "/")) (str "/"))))
 
-(defn file->item
+(defn- file->item
   [parent ^java.io.File file]
   (config/bind [^:required hostname [:goophi :hostname]
                 ^{:default 70} port [:goophi :port]]

@@ -14,10 +14,12 @@
           [:a {:href url} url]]))
 
 (defn redirect
+  "Generates an HTML page redirecting to url."
   [url]
   (java.io.ByteArrayInputStream. (.getBytes (page url))))
 
 (defn selector->url
+  "Extracts url from a URL selector."
   [selector]
   (let [url (subs selector 4)]
     (when-not (clojure.string/blank? url)
