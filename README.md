@@ -99,7 +99,7 @@ Build Aleph compatible request handlers with the tcp module.
 
 ## Middleware
 
-Read and change the request map by composing custom request handlers.
+Read or change the request map by composing a custom request handler.
 
 	(defn log-request
 	  [request]
