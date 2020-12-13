@@ -16,7 +16,7 @@
 (defonce ^:private re-chars (set "\\.*+|?()[]{}$^"))
 
 (defn- re-escape [s]
-  (s/escape s #(if (re-chars %) (str \\ %))))
+  (s/escape s #(when (re-chars %) (str \\ %))))
 
 (defn- tree->regex
   [route]
@@ -68,41 +68,55 @@
        (split-vars (conj param-bindings top) req-bindings (rest vars)))
      (list param-bindings req-bindings))))
 
-(defmacro route
-  "Returns a function that takes a request as argument. The function
-  evaluates body and returns the value of the expression if pattern
-  is matching the request path. Parameters are bound to vars.
+(defmacro ->route
+  "Returns a function that takes a request map as argument. The function
+  evaluates body and returns the value of the expression if pattern is
+  matching the request path. Parameters are bound to vars.
 
   Example:
-    (route \"/products/:category/:name\"
-           [category name]
-           (get-product category name))
+    (->route
+     \"/blog/posts/:id\"
+     [id]
+     (get-post id))
 
-  Use the :as keyword to assign the entire request map to a symbol:
+  Use the :as keyword to assign the entire request map to a symbol.
 
   Example:
-    (route \"/products/:category/search\"
-           [category :as req]
-           (search-products category (:query req)))"
-  [pattern vars body]
+    (->route
+     \"/blog/:category/search\"
+     [category :as req]
+     (search-category category (:query req)))"
+  [pattern vars & body]
   (let [r# (compile-pattern pattern)
         [param-bindings# req-bindings#] (split-vars vars)]
-    `(fn [request#]
-       (when-let [match# (matches ~r# request#)]
-         (let [~param-bindings# (take ~(count param-bindings#) (vals (:params match#)))
-               ~req-bindings# (repeat ~(count req-bindings#) match#)] ~body)))))
+    `(fn [m#]
+       (let [request# (if (instance? String m#)
+                        {:path m#}
+                        m#)]
+         (when-let [match# (matches ~r# (:path request#))]
+           (let [~param-bindings# (take ~(count param-bindings#) (vals (:params match#)))
+                 ~req-bindings# (repeat ~(count req-bindings#) (merge request# match#))]
+             (do ~@body)))))))
 
-(defmacro defroutes
-  "Defines a set of routes.
+(defmacro ->routes
+  "Returns a function that takes a request map as argument. The function
+  evaluates the body of the first route matching the request path and
+  returns the value of the expression. Parameters are bound to vars.
 
   Example:
-    (defroutes my-routes
-      (\"/products/:category/:id\"
-       [category id]
-       (get-product category id))
+    (->routes
+     (\"/blog/posts/:id\"
+      [id]
+      (get-post id))
 
-      (\"/products/:category/search\"
-       [category :as req]
-       (search-products category (:query req))))"
-  [name & routes]
-  `(def ~name ~(mapv #(cons `route %) routes)))
+     (\"/blog/:category/search\"
+      [category :as req]
+      (search-category category (:query req))))"
+  [& routes]
+  (let [routes# (mapv eval
+                      (map #(cons `->route %)
+                           routes))]
+    `(fn [request#]
+       (some (fn [r#]
+               (r# request#))
+             ~routes#))))

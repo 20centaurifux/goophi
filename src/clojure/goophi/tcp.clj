@@ -2,9 +2,7 @@
   (:require [manifold.stream :as s]
             [clojure.core.async :as async]
             [goophi.core :as core]
-            [goophi.response :refer [take! menu-entity]])
-  (:import [java.io InputStream ByteArrayInputStream]
-           [goophi.core Item]))
+            [goophi.response :refer [take! menu-entity]]))
 
 (defonce ^:private max-request 128)
 (defonce ^:private transfer-chunk-size 8192)
@@ -20,12 +18,12 @@
           (recur buffer))))))
 
 (defn- route-request
-  [routes request]
+  [app request]
   (try
-    (if-let [response (some #(% request) routes)]
+    (if-let [response (app request)]
       response
       (menu-entity (core/info "Not found.")))
-    (catch Exception e (menu-entity (core/info "Internal Server Error.")))))
+    (catch Exception _ (menu-entity (core/info "Internal Server Error.")))))
 
 (defn- request-str
   [data]
@@ -41,7 +39,7 @@
   (> (count data) max-request))
 
 (defn- handle-connection
-  [in out routes]
+  [in out app request]
   (future
     (loop [buffer nil]
       (if-let [data (async/alt!! [in (async/timeout timeout-millis)] ([v _] v))]
@@ -50,15 +48,22 @@
           (if (exceeds-maximum? buffer')
             (s/put! out (menu-entity (core/info "Request too long.")))
             (if-not (empty? r)
-              (put-response! (route-request routes (request-str l)) out)
+              (put-response! (route-request
+                              app
+                              (assoc request :path (request-str l)))
+                             out)
               (recur buffer'))))
         (s/put! out (menu-entity (core/info "Connection timeout.")))))
     (s/close! out)))
 
 (defn ->gopher-handler
   "Creates an Aleph handler."
-  [routes]
-  (fn [s info]
+  [app]
+  (fn [out info]
     (let [in (async/chan)]
-      (handle-connection in s routes)
-      (s/connect s in))))
+      (handle-connection
+       in
+       out
+       app
+       (select-keys info [:remote-addr]))
+      (s/connect out in))))

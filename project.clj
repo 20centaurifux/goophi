@@ -9,7 +9,8 @@
                  [org.clojure/core.memoize "1.0.236"]
                  [hiccup "1.0.5"]
                  [zcfux/confick "0.1.1"]
-                 [manifold "0.1.9-alpha4"]]
+                 [manifold "0.1.9-alpha4"]
+                 [org.clojure/core.async "1.3.610"]]
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]
   :target-path "target/%s"

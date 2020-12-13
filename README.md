@@ -22,20 +22,21 @@ A Gopher request is represented as a map. It has the following keys:
 * path: selector
 * query: search string
 * params: parameters found in selector
+* remote-addr: remote ip address
 
 The routing module converts a Gopher request to a map & evaluates a function returning an entity.
 
-	(require '[goophi.core :as c]
-	         '[goophi.routing :as r]
-	         '[goophi.response :as res])
+	(use 'goophi.core)
+	(use 'goophi.routing)
+	(use 'goophi.response)
 
 	(def hello-world
-	  (r/route
-	    "*"
-	    []
-	    (res/menu-entity (c/info "hello world"))))
+	  (->route
+	   "*"
+	   []
+	   (menu-entity (info "hello world"))))
 
-	(res/dumps (hello-world ""))
+	(dumps (hello-world ""))
 
 	-> ihello world    fake    (NULL)  0
 	-> .
@@ -44,15 +45,15 @@ The routing module converts a Gopher request to a map & evaluates a function ret
 
 gooφ has a built-in filesystem module with gophermap support.
 
-	(require '[goophi.fs :as fs])
+	(use 'goophi.fs)
 
 	(def fs-example
-	  (r/route
-	    "*"
-	    [:as req]
-	    (fs/get-contents "./pub" (:path req))))
+	  (->route
+	   "*"
+	   [:as req]
+	   (get-contents "./pub" (:path req))))
 
-	(res/dumps (fs-example "helloworld.txt"))
+	(dumps (fs-example "helloworld.txt"))
 
 	->   |\__/,|   (`\
 	->  _.|o o  |_   ) )
@@ -67,17 +68,17 @@ management.
 
 URLs are displayed on an HTML redirection page.
 
-	(require '[goophi.redirect :as html])
+	(use 'goophi.redirect)
 
 	(def redirect-example
-	  (r/route
-	    "URL\\:*"
-	    [:as req]
-	    (if-let [url (html/selector->url (:path req))]
-	      (html/redirect url)
-	      (res/menu-entity (c/info "Not found.")))))
+	  (->route
+	   "URL\\:*"
+	   [:as req]
+	   (if-let [url (selector->url (:path req))]
+	     (redirect url)
+	     (menu-entity (info "Not found.")))))
 
-	(res/dumps (redirect-example "URL:https://github.com/20centaurifux/goophi"))
+	(dumps (redirect-example "URL:https://github.com/20centaurifux/goophi"))
 
 ### TCP
 
@@ -85,12 +86,37 @@ Build Aleph compatible request handlers with the tcp module.
 
 	(require '[aleph.tcp :as tcp]
 	         '[goophi.tcp :refer [->gopher-handler]])
- 
-	(r/defroutes routes
+
+	(def my-routes
+	  (->routes
 	   ("*"
-	     [:as req]
-	     (fs/get-contents "./pub" (:path req))))
+	   [:as req]
+	   (get-contents "./pub" (:path req)))))
 
 	(tcp/start-server
-	 (->gopher-handler routes)
-	 {:port 70})
+	 (->gopher-handler my-routes)
+	 {:port 8070})
+
+## Middleware
+
+Read and change the request map by composing custom request handlers.
+
+	(defn log-request
+	  [request]
+	  (printf "address: %s, path: %s\n"
+	          (:remote-addr request)
+	          (:path request))
+	  (flush)
+	  request) ; bypass request map
+
+	(def my-app
+	  (comp
+	   (->routes
+	    ("*"
+	     [:as req]
+	     (get-contents "./pub" (:path req))))
+	   log-request))
+
+	(def s (tcp/start-server
+	        (->gopher-handler my-app)
+	        {:port 8070}))

@@ -1,5 +1,4 @@
 (ns goophi.response
-  (:require [clojure.java.io :as io])
   (:import [goophi.core Item]
            [goophi.textfileentity TextfileEntityInputStream]))
 
