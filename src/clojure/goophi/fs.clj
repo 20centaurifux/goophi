@@ -17,9 +17,9 @@
 (defn- file-extension-map
   []
   (config/bind [^{:default {}} extensions [:goophi :fs :file-extensions]]
-               (-> extensions
-                   (update "g" #(conj % "gif"))
-                   (update "0" #(conj % "xml" "json")))))
+    (-> extensions
+        (update "g" #(conj % "gif"))
+        (update "0" #(conj % "xml" "json")))))
 
 (defn- map-extension
   [filename]
@@ -58,11 +58,11 @@
   [parent ^java.io.File file]
   (config/bind [^:required hostname [:goophi :hostname]
                 ^{:default 70} port [:goophi :port]]
-               (core/->Item (map-file-type file)
-                            (.getName file)
-                            (->selector parent (.getName file))
-                            hostname
-                            port)))
+    (core/->Item (map-file-type file)
+                 (.getName file)
+                 (->selector parent (.getName file))
+                 hostname
+                 port)))
 
 (defn- list-directory
   [selector ^java.io.File dir]
@@ -76,10 +76,10 @@
   [text]
   (config/bind [^:required hostname [:goophi :hostname]
                 ^{:default 70} port [:goophi :port]]
-               (cond
-                 (= text "@hostname") hostname
-                 (= text "@port") port
-                 :else text)))
+    (cond
+      (= text "@hostname") hostname
+      (= text "@port") port
+      :else text)))
 
 (defn- transform-gophermap-parts
   [parts]
