@@ -51,9 +51,9 @@ gooφ has a built-in filesystem module with gophermap support.
 	  (->route
 	   "*"
 	   [:as req]
-	   (get-contents "./pub" (:path req))))
+	   (get-contents "./example-pub" (:path req))))
 
-	(dumps (fs-example "helloworld.txt"))
+	(dumps (fs-example "docs/hello.txt"))
 
 	->   |\__/,|   (`\
 	->  _.|o o  |_   ) )
@@ -91,7 +91,7 @@ Build Aleph compatible request handlers with the tcp module.
 	  (->routes
 	   ("*"
 	   [:as req]
-	   (get-contents "./pub" (:path req)))))
+	   (get-contents "./example-pub" (:path req)))))
 
 	(tcp/start-server
 	 (->gopher-handler my-routes)
@@ -114,7 +114,7 @@ Read or change the request map by composing a custom request handler.
 	   (->routes
 	    ("*"
 	     [:as req]
-	     (get-contents "./pub" (:path req))))
+	     (get-contents "./example-pub" (:path req))))
 	   log-request))
 
 	(def s (tcp/start-server

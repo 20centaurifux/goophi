@@ -14,8 +14,8 @@
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}}
+  :profiles {:uberjar {:aot :all}
+             :test {:dependencies [["aleph" "0.4.6"]]}}
   :plugins [[lein-cljfmt "0.6.7"]
-            [lein-codox "0.10.7"]]
-  :codox {:output-path "./doc"}
+            [lein-marginalia "0.9.1"]]
   :cljfmt {:indents {bind [[:inner 0]]}})

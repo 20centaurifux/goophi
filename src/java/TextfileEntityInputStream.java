@@ -172,6 +172,11 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 	private void endOfFile() throws IOException
 	{
+		if (state != State.NEWLINE)
+		{
+			out.write("\r\n".getBytes());
+		}
+
 		state = State.CLOSED;
 
 		in.close();

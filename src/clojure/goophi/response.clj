@@ -1,4 +1,5 @@
 (ns goophi.response
+  (:require [goophi.core])
   (:import [goophi.core Item]
            [goophi.textfileentity TextfileEntityInputStream]))
 
@@ -7,7 +8,7 @@
   (take! [in out]))
 
 (defn Response?
-  "Return true if x is a Response."
+  "Returns true if x is a Response."
   [x]
   (satisfies? Response x))
 
@@ -47,7 +48,9 @@
 (extend-protocol MenuEntityFactory
   java.lang.String
   (menu-entity [text]
-    (java.io.ByteArrayInputStream. (.getBytes (str text ".\r\n"))))
+    (java.io.ByteArrayInputStream. (.getBytes (str
+                                               (clojure.string/trimr text)
+                                               "\r\n.\r\n"))))
   Item
   (menu-entity [item]
     (menu-entity (str item))))
