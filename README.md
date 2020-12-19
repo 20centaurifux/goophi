@@ -22,7 +22,7 @@ A Gopher request is represented as a map. It has the following keys:
 * path: selector
 * query: search string
 * params: parameters found in selector
-* remote-addr: remote ip address
+* remote-addr: remote ip address (added by the Aleph handler)
 
 The routing module converts a Gopher request to a map & evaluates a function returning an entity.
 
