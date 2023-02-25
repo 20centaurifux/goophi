@@ -94,8 +94,12 @@
                         {:path m#}
                         m#)]
          (when-let [match# (matches ~r# (:path request#))]
-           (let [~param-bindings# (take ~(count param-bindings#) (vals (:params match#)))
-                 ~req-bindings# (repeat ~(count req-bindings#) (merge request# match#))]
+           (let [~param-bindings# (take
+                                   ~(count param-bindings#)
+                                   (vals (:params match#)))
+                 ~req-bindings# (repeat
+                                 ~(count req-bindings#)
+                                 (merge request# match#))]
              (do ~@body)))))))
 
 (defmacro ->routes

@@ -42,7 +42,9 @@
   [in out app request]
   (future
     (loop [buffer nil]
-      (if-let [data (async/alt!! [in (async/timeout timeout-millis)] ([v _] v))]
+      (if-let [data (async/alt!!
+                      [in (async/timeout timeout-millis)]
+                      ([v _] v))]
         (let [[l r] (split-bytes data \newline)
               buffer' (concat buffer l)]
           (if (exceeds-maximum? buffer')
