@@ -1,5 +1,7 @@
 (ns goophi.redirect
-  (:use hiccup.core hiccup.page))
+  (:require [clojure.java.io :refer [as-url]]
+            [clojure.string :refer [blank?]]
+            [hiccup.page :refer [html5]]))
 
 (defn- page
   [url]
@@ -22,7 +24,7 @@
   "Extracts url from a URL selector."
   [selector]
   (let [url (subs selector 4)]
-    (when-not (clojure.string/blank? url)
+    (when-not (blank? url)
       (try
-        (clojure.java.io/as-url url)
+        (as-url url)
         (catch Exception _)))))

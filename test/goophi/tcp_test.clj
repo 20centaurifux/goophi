@@ -1,20 +1,18 @@
 (ns goophi.tcp-test
-  (:require [clojure.test :refer :all]
-            [aleph.tcp :as tcp]
-            [manifold.stream :as s]
+  (:require [aleph.tcp :as tcp]
+            [clojure.test :refer :all]
             [confick.core :refer [bind]]
             [goophi.response :refer :all]
             [goophi.routing :refer :all]
-            [goophi.tcp :refer :all]))
+            [goophi.tcp :refer :all]
+            [manifold.stream :as s]))
 
 (defn- ->echo-server
   []
-  (->route "*"
-           [:as req]
-           (-> req
-               :path
-               .getBytes
-               java.io.ByteArrayInputStream.)))
+  (->route "*" [:as req] (-> req
+                             :path
+                             .getBytes
+                             java.io.ByteArrayInputStream.)))
 
 (deftest aleph
   (testing "tcp echo server"

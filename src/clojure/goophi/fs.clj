@@ -1,22 +1,22 @@
 (ns goophi.fs
-  (:require [goophi.core :as core]
-            [goophi.response :as response]
-            [confick.core :as config]
-            [clojure.java.io :as io]
-            [clojure.string :as s])
-  (:import [java.net URLConnection]
-           [java.io FileInputStream]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [confick.core :refer [bind]]
+            [goophi.core :as core]
+            [goophi.response :as response])
+  (:import [java.io FileInputStream]
+           [java.net URLConnection]
            [java.nio.file Paths]))
 
 (defn- file-extension
   [filename]
-  (-> (s/split filename #"\.")
+  (-> (str/split filename #"\.")
       last
-      s/lower-case))
+      str/lower-case))
 
 (defn- file-extension-map
   []
-  (config/bind [^{:default {}} extensions [:goophi :fs :file-extensions]]
+  (bind [^{:default {} :conform map?} extensions [:goophi :fs :file-extensions]]
     (-> extensions
         (update "g" #(conj % "gif"))
         (update "0" #(conj % "xml" "json")))))
@@ -24,7 +24,8 @@
 (defn- map-extension
   [filename]
   (let [ext (file-extension filename)]
-    (some (fn [[t e]] (when (some #(= ext %) e) t))
+    (some (fn [[t e]]
+            (when (some #(= ext %) e) t))
           (file-extension-map))))
 
 (defn- map-mime
@@ -32,8 +33,8 @@
   (let [mime (or (URLConnection/guessContentTypeFromName filename)
                  "")]
     (cond
-      (s/starts-with? mime "text/") "0"
-      (s/starts-with? mime "image/") "i")))
+      (str/starts-with? mime "text/") "0"
+      (str/starts-with? mime "image/") "i")))
 
 (defn- guess-file-type
   [filename]
@@ -49,15 +50,15 @@
 
 (defn- ->selector
   [parent filename]
-  (let [rtrimmed (s/replace parent #"/$" "")
+  (let [rtrimmed (str/replace parent #"/$" "")
         selector (str rtrimmed "/" filename)]
     (cond->> selector
-      (not (s/starts-with? selector "/")) (str "/"))))
+      (not (str/starts-with? selector "/")) (str "/"))))
 
 (defn- file->item
   [parent ^java.io.File file]
-  (config/bind [^:required hostname [:goophi :hostname]
-                ^{:default 70} port [:goophi :port]]
+  (bind [^{:required true :conform string?} hostname [:goophi :hostname]
+         ^{:default 70 :conform pos?} port [:goophi :port]]
     (core/->Item (map-file-type file)
                  (.getName file)
                  (->selector parent (.getName file))
@@ -69,13 +70,13 @@
   (->> (.listFiles dir)
        sort
        (map #(str (file->item selector %)))
-       s/join
+       str/join
        response/menu-entity))
 
 (defn- replace-keyword
   [text]
-  (config/bind [^:required hostname [:goophi :hostname]
-                ^{:default 70} port [:goophi :port]]
+  (bind [^{:required true :conform string?} hostname [:goophi :hostname]
+         ^{:default 70 :conform pos?} port [:goophi :port]]
     (cond
       (= text "@hostname") hostname
       (= text "@port") port
@@ -88,7 +89,9 @@
 
 (defn- convert-line
   [line]
-  (if-let [match (re-matches #"^([a-zA-Z0-9])(.+)\t(.+)\t(.+)\t(\d+|@port)$" (s/trim line))]
+  (if-let [match (re-matches
+                  #"^([a-zA-Z0-9])(.+)\t(.+)\t(.+)\t(\d+|@port)$"
+                  (str/trim line))]
     (apply core/->Item (transform-gophermap-parts (rest match)))
     (core/info line)))
 
@@ -97,7 +100,7 @@
   (with-open [rdr (io/reader file)]
     (->> (line-seq rdr)
          (map (comp str convert-line))
-         s/join
+         str/join
          response/menu-entity)))
 
 (defn- read-directory
@@ -114,8 +117,8 @@
       (response/text-file-entity in)
       (response/binary-entity in))))
 
-(defn- ^java.nio.file.Path ->Path
-  [path]
+(defn- ->Path
+  ^java.nio.file.Path [path]
   (.normalize
    (-> (.toURI (io/file path))
        Paths/get)))
@@ -131,7 +134,7 @@
   [path]
   (cond
     (nil? path) ""
-    (s/starts-with? path "/") (str "." path)
+    (str/starts-with? path "/") (str "." path)
     :else path))
 
 (defn get-contents

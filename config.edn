@@ -1,3 +1,1 @@
-{
- :goophi {:hostname "localhost" :port 8070}
-}
+{:goophi {:hostname "localhost" :port 8070}}

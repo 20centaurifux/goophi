@@ -1,11 +1,11 @@
 (ns goophi.core
-  (:require [clojure.string :as s]))
+  (:require [clojure.string :as str]))
 
 (defn- sanitize-str
   [text]
-  (if (s/blank? text) "" text))
+  (if (str/blank? text) "" text))
 
-(defn- request-matches
+(defn- match-request
   [request]
   (re-matches #"^([\u0020-\u007e]*)\t?([\u0020-\u007e]+)?$" request))
 
@@ -13,7 +13,7 @@
   "Returns path and query of a gopher request. Only printable ASCII characters
   are accepted."
   [request]
-  (when-let [match (request-matches request)]
+  (when-let [match (match-request request)]
     (map sanitize-str (rest match))))
 
 (defn- item->seq
@@ -23,10 +23,9 @@
 
 (defn- item->str
   [item]
-  (s/join "\t" (item->seq item)))
+  (str/join "\t" (item->seq item)))
 
-(defrecord Item
-           [type display-text selector hostname port]
+(defrecord Item [type display-text selector hostname port]
   Object
   (toString [item]
     (str (item->str item) "\r\n")))
@@ -41,7 +40,7 @@
   ([type display-text selector hostname port]
    (Item. type display-text selector hostname port))
   ([type display-text selector hostname]
-   (Item. type display-text selector hostname 70)))
+   (->Item type display-text selector hostname 70)))
 
 (defn info
   "Constructs an information item."

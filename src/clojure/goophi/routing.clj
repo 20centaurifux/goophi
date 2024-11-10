@@ -1,6 +1,6 @@
 (ns goophi.routing
-  (:require [goophi.core :refer [parse-request]]
-            [clojure.string :as s]
+  (:require [clojure.string :as s]
+            [goophi.core :refer [parse-request]]
             [instaparse.core :as insta]))
 
 (defonce ^:private route-parser

@@ -1,8 +1,8 @@
 (ns goophi.tcp
-  (:require [manifold.stream :as s]
-            [clojure.core.async :as async]
+  (:require [clojure.core.async :as async]
             [goophi.core :as core]
-            [goophi.response :refer [take! menu-entity]]))
+            [goophi.response :refer [take! menu-entity]]
+            [manifold.stream :as s]))
 
 (defonce ^:private max-request 128)
 (defonce ^:private transfer-chunk-size 8192)

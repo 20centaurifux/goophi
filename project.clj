@@ -15,6 +15,6 @@
   :target-path "target/%s"
   :aot nil
   :profiles {:test {:dependencies [["aleph" "0.8.1"]]}}
-  :plugins [[dev.weavejester/cljfmt "0.13.0"]
+  :plugins [[dev.weavejester/lein-cljfmt "0.13.0"]
             [lein-marginalia "0.9.2"]]
-  :cljfmt {:indents {bind [[:inner 0]]}})
+  :cljfmt {:load-config-file? true})

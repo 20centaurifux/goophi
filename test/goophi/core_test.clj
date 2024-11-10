@@ -5,18 +5,20 @@
 (deftest item
   (testing "->Item"
     (let [item (->Item "1" "hello world" "/" "localhost" 70)]
-      (is (= (:type item) "1"))
-      (is (= (:display-text item) "hello world"))
-      (is (= (:selector item) "/"))
-      (is (= (:hostname item) "localhost"))
-      (is (= (:port item) 70))
-      (is (= (str item) "1hello world\t/\tlocalhost\t70\r\n"))
-      (is (Item? item))))
+      (is (Item? item))
+      (is (= "1" (:type item)))
+      (is (= "hello world" (:display-text item)))
+      (is (= "/" (:selector item)))
+      (is (= "localhost" (:hostname item)))
+      (is (= 70 (:port item)))
+      (is (= "1hello world\t/\tlocalhost\t70\r\n" (str item)))))
+
   (testing "info"
     (let [item (info "foobar")]
-      (is (= (:type item) "i"))
-      (is (= (:display-text item) "foobar"))
-      (is (Item? item))))
+      (is (Item? item))
+      (is (= "i" (:type item)))
+      (is (= "foobar" (:display-text item)))))
+
   (testing "Item?"
     (is (Item? (info "baz")))
     (is (not (Item? "foobar")))
@@ -27,18 +29,22 @@
     (let [[path query] (parse-request "")]
       (is (= path ""))
       (is (= query ""))))
+
   (testing "without query"
     (let [[path query] (parse-request "/foobar")]
-      (is (= path "/foobar"))
-      (is (= query ""))))
+      (is (= "/foobar" path))
+      (is (= "" query))))
+
   (testing "with query"
     (let [[path query] (parse-request "/foo\tbar")]
-      (is (= path "/foo"))
-      (is (= query "bar"))))
+      (is (= "/foo" path))
+      (is (= "bar" query))))
+
   (testing "non-ascii path"
     (let [[path query] (parse-request "/gooφ\tphi")]
       (is (nil? path))
       (is (nil? query))))
+
   (testing "non-ascii query"
     (let [[path query] (parse-request "/goo\tφ")]
       (is (nil? path))
