@@ -9,9 +9,9 @@ gooφ is a Gopher implementation written in Clojure. It comes with the following
 
 ## Installation
 
-The library can be installed from Clojars using Leiningen:
+The library can be installed from Clojars:
 
-[![Clojars Project](http://clojars.org/zcfux/goophi/latest-version.svg)](https://clojars.org/zcfux/goophi)
+[![Clojars Project](https://img.shields.io/clojars/v/de.dixieflatline/goophi.svg?include_prereleases)](https://clojars.org/de.dixieflatline/goophi)
 
 ## Quick overview
 
