@@ -1,4 +1,4 @@
-(defproject zcfux/goophi "0.1.4-SNAPSHOT"
+(defproject de.dixieflatline/goophi "0.1.4-SNAPSHOT"
   :description "Gopher protocol library."
   :url "https://github.com/20centaurifux/goophi"
   :license {:name "AGPLv3"
