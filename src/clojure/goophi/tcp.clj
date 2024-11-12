@@ -47,16 +47,16 @@
       (d/chain
        (d/loop [buffer []]
          (d/let-flow [data (s/try-take! s nil timeout-millis ::timeout)]
-                     (if (#{::timeout} data)
-                       (s/put! s (menu-entity (core/info "Connection timeout.")))
-                       (when data
-                         (let [[l r] (split-bytes data \newline)
-                               buffer' (concat buffer l)]
-                           (if (exceeds-maximum? buffer')
-                             (s/put! s (menu-entity (core/info "Request too long.")))
-                             (if (seq r)
-                               (let [request' (assoc request :path (->path buffer'))]
-                                 (put-response! (handle-request f request') s))
-                               (d/recur buffer'))))))))
+           (if (#{::timeout} data)
+             (s/put! s (menu-entity (core/info "Connection timeout.")))
+             (when data
+               (let [[l r] (split-bytes data \newline)
+                     buffer' (concat buffer l)]
+                 (if (exceeds-maximum? buffer')
+                   (s/put! s (menu-entity (core/info "Request too long.")))
+                   (if (seq r)
+                     (let [request' (assoc request :path (->path buffer'))]
+                       (put-response! (handle-request f request') s))
+                     (d/recur buffer'))))))))
        (fn [_]
          (s/close! s))))))
