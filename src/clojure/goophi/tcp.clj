@@ -10,11 +10,11 @@
 (defonce ^:private timeout-millis 5000)
 
 (defn- handle-request
-  [app request]
+  [f request]
   (try
-    (if-let [response (app request)]
+    (if-let [response (f request)]
       response
-      (menu-entity (core/info "Not found.")))
+      (menu-entity (core/info "Not Found.")))
     (catch Exception _ (menu-entity (core/info "Internal Server Error.")))))
 
 (defn- put-response!
@@ -41,22 +41,22 @@
 
 (defn ->gopher-handler
   "Creates an Aleph handler."
-  [app]
+  [f]
   (fn [s info]
     (let [request (select-keys info [:remote-addr])]
       (d/chain
        (d/loop [buffer []]
          (d/let-flow [data (s/try-take! s nil timeout-millis ::timeout)]
-           (if (#{::timeout} data)
-             (s/put! s (menu-entity (core/info "Connection timeout.")))
-             (when data
-               (let [[l r] (split-bytes data \newline)
-                     buffer' (concat buffer l)]
-                 (if (exceeds-maximum? buffer')
-                   (s/put! s (menu-entity (core/info "Request too long.")))
-                   (if (seq r)
-                     (let [request' (assoc request :path (->path buffer'))]
-                       (put-response! (handle-request app request') s))
-                     (d/recur buffer'))))))))
+                     (if (#{::timeout} data)
+                       (s/put! s (menu-entity (core/info "Connection timeout.")))
+                       (when data
+                         (let [[l r] (split-bytes data \newline)
+                               buffer' (concat buffer l)]
+                           (if (exceeds-maximum? buffer')
+                             (s/put! s (menu-entity (core/info "Request too long.")))
+                             (if (seq r)
+                               (let [request' (assoc request :path (->path buffer'))]
+                                 (put-response! (handle-request f request') s))
+                               (d/recur buffer'))))))))
        (fn [_]
          (s/close! s))))))

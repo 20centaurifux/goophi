@@ -4,8 +4,8 @@
   :license {:name "AGPLv3"
             :url "https://www.gnu.org/licenses/agpl-3.0"}
   :dependencies [[org.clojure/clojure "1.11.1"]
-                 [instaparse "1.5.0"]
                  [org.clojure/core.memoize "1.1.266"]
+                 [instaparse "1.5.0"]
                  [hiccup "1.0.5"]
                  [de.dixieflatline/confick "0.2.0-SNAPSHOT"]
                  [manifold "0.4.3"]]
@@ -14,6 +14,7 @@
   :target-path "target/%s"
   :aot nil
   :profiles {:test {:dependencies [["aleph" "0.8.1"]]}}
-  :plugins [[dev.weavejester/lein-cljfmt "0.13.0"]
+  :plugins [[org.clojure/test.check "1.1.1"]
+            [dev.weavejester/lein-cljfmt "0.13.0"]
             [lein-marginalia "0.9.2"]]
   :cljfmt {:load-config-file? true})
