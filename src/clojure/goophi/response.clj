@@ -14,13 +14,13 @@
   (satisfies? Response x))
 
 (defn- dump
-  [response transform & {:keys [buffer-size] :or {buffer-size 8192}}]
+  [response f & {:keys [buffer-size] :or {buffer-size 8192}}]
   (loop [buffer (byte-array buffer-size)]
     (let [available (take! response buffer)]
       (when (>= available 0)
         (-> (take available buffer)
             byte-array
-            transform
+            f
             print)
         (recur buffer)))))
 
@@ -33,9 +33,8 @@
   "Reads response & prints hexdump to *out*."
   [response & {:keys [columns] :or {columns 16}}]
   (dump response
-        #(str
-          (join " " (map (partial format "0x%02x") %))
-          \newline)
+        #(str (join " " (map (partial format "0x%02x") %))
+              \newline)
         :buffer-size columns))
 
 (extend java.io.InputStream
