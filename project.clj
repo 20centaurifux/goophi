@@ -7,7 +7,6 @@
                  [org.clojure/core.memoize "1.1.266"]
                  [instaparse "1.5.0"]
                  [hiccup "1.0.5"]
-                 [de.dixieflatline/confick "0.2.0-SNAPSHOT"]
                  [manifold "0.4.3"]]
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]

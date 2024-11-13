@@ -2,15 +2,16 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.test :refer :all]
-            [confick.core :refer [bind]]
             [goophi.fs :refer :all]
             [goophi.response :refer :all]))
 
 (defonce ^:private base-dir "./example-pub")
+(defonce ^:private hostname "example.org")
+(defonce ^:private port 7070)
 
 (defn- roundtrip
   [selector]
-  (-> (get-contents base-dir selector)
+  (-> (get-contents base-dir selector :hostname hostname :port port)
       dumps
       with-out-str))
 
@@ -20,26 +21,22 @@
 
 (deftest menu
   (testing "gophermap"
-    (bind [hostname [:goophi :hostname]
-           port [:goophi :port]]
-      (let [lines (str/split (roundtrip "") #"\r\n")]
-        (is (= 4 (count lines)))
-        (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
-        (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
-        (is (= (format "1docs\tdocs\t%s\t%d" hostname port)
-               (nth lines 2)))
-        (is (= "." (nth lines 3))))))
+    (let [lines (str/split (roundtrip "") #"\r\n")]
+      (is (= 4 (count lines)))
+      (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
+      (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
+      (is (= (format "1docs\tdocs\t%s\t%d" hostname port)
+             (nth lines 2)))
+      (is (= "." (nth lines 3)))))
 
   (testing "listing"
-    (bind [hostname [:goophi :hostname]
-           port [:goophi :port]]
-      (let [lines (str/split (roundtrip "docs") #"\r\n")]
-        (is (= 3 (count lines)))
-        (is (= (format "0hello.txt\t/docs/hello.txt\t%s\t%d" hostname port)
-               (nth lines 0)))
-        (is (= (format "iworld.jpg\t/docs/world.jpg\t%s\t%d" hostname port)
-               (nth lines 1)))
-        (is (= "." (nth lines 2)))))))
+    (let [lines (str/split (roundtrip "docs") #"\r\n")]
+      (is (= 3 (count lines)))
+      (is (= (format "0hello.txt\t/docs/hello.txt\t%s\t%d" hostname port)
+             (nth lines 0)))
+      (is (= (format "iworld.jpg\t/docs/world.jpg\t%s\t%d" hostname port)
+             (nth lines 1)))
+      (is (= "." (nth lines 2))))))
 
 (defn- stream->bytes
   [in]

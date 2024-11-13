@@ -1,7 +1,6 @@
 (ns goophi.fs
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [confick.core :refer [bind]]
             [goophi.core :as core]
             [goophi.response :as response])
   (:import [java.io FileInputStream]
@@ -14,38 +13,30 @@
       last
       str/lower-case))
 
-(defn- file-extension-map
-  []
-  (bind [^{:default {} :conform map?} extensions [:goophi :fs :file-extensions]]
-    (-> extensions
-        (update "g" #(conj % "gif"))
-        (update "0" #(conj % "xml" "json")))))
-
 (defn- map-extension
-  [filename]
+  [filename item-type-map]
   (let [ext (file-extension filename)]
-    (some (fn [[t e]]
-            (when (some #(= ext %) e) t))
-          (file-extension-map))))
+    (some (fn [[t coll]]
+            (when (some #(= ext %) coll) t))
+          item-type-map)))
 
 (defn- map-mime
   [filename]
-  (let [mime (or (URLConnection/guessContentTypeFromName filename)
-                 "")]
+  (let [mime (or (URLConnection/guessContentTypeFromName filename) "")]
     (cond
       (str/starts-with? mime "text/") "0"
       (str/starts-with? mime "image/") "i")))
 
 (defn- guess-file-type
-  [filename]
-  (or (map-extension filename)
+  [filename item-type-map]
+  (or (map-extension filename item-type-map)
       (map-mime filename)
       "9"))
 
 (defn- map-file-type
-  [^java.io.File file]
+  [^java.io.File file item-type-map]
   (if (.isFile file)
-    (guess-file-type (.getName file))
+    (guess-file-type (.getName file) item-type-map)
     "1"))
 
 (defn- ->selector
@@ -56,64 +47,52 @@
       (not (str/starts-with? selector "/")) (str "/"))))
 
 (defn- file->item
-  [parent ^java.io.File file]
-  (bind [^{:required true :conform string?} hostname [:goophi :hostname]
-         ^{:default 70 :conform pos?} port [:goophi :port]]
-    (core/->Item (map-file-type file)
-                 (.getName file)
-                 (->selector parent (.getName file))
-                 hostname
-                 port)))
+  [parent ^java.io.File file hostname port item-type-map]
+  (core/->Item (map-file-type file item-type-map)
+               (.getName file)
+               (->selector parent (.getName file))
+               hostname
+               port))
 
 (defn- list-directory
-  [selector ^java.io.File dir]
+  [selector ^java.io.File dir hostname port item-type-map]
   (->> (.listFiles dir)
        sort
-       (map #(str (file->item selector %)))
+       (map #(str (file->item selector % hostname port item-type-map)))
        str/join
        response/menu-entity))
 
-(defn- replace-keyword
-  [text]
-  (bind [^{:required true :conform string?} hostname [:goophi :hostname]
-         ^{:default 70 :conform pos?} port [:goophi :port]]
-    (cond
-      (= text "@hostname") hostname
-      (= text "@port") port
-      :else text)))
-
 (defn- transform-gophermap-parts
-  [parts]
+  [parts keywords]
   (concat (take 3 parts)
-          (map replace-keyword (take-last 2 parts))))
+          (map #(get keywords % %) (take-last 2 parts))))
 
 (defn- convert-line
-  [line]
-  (if-let [match (re-matches
-                  #"^([a-zA-Z0-9])(.+)\t(.+)\t(.+)\t(\d+|@port)$"
-                  (str/trim line))]
-    (apply core/->Item (transform-gophermap-parts (rest match)))
+  [line keywords]
+  (if-let [match (re-matches #"^(?i)([a-z0-9\+:;<])(.+)\t(.+)\t(.+)\t(\d+|@port)$"
+                             (str/trim line))]
+    (apply core/->Item (transform-gophermap-parts (rest match) keywords))
     (core/info line)))
 
 (defn- read-gophermap
-  [file]
+  [file hostname port]
   (with-open [rdr (io/reader file)]
     (->> (line-seq rdr)
-         (map (comp str convert-line))
+         (map (comp str #(convert-line % {"@hostname" hostname "@port" port})))
          str/join
          response/menu-entity)))
 
 (defn- read-directory
-  [selector dir]
+  [selector dir hostname port item-type-map]
   (let [gophermap (io/file dir "gophermap")]
     (if (.exists gophermap)
-      (read-gophermap gophermap)
-      (list-directory selector dir))))
+      (read-gophermap gophermap hostname port)
+      (list-directory selector dir hostname port item-type-map))))
 
 (defn- read-file
-  [^java.io.File file]
+  [^java.io.File file item-type-map]
   (let [in (FileInputStream. file)]
-    (if (= "0" (guess-file-type (.getPath file)))
+    (if (= "0" (guess-file-type (.getPath file) item-type-map))
       (response/text-file-entity in)
       (response/binary-entity in))))
 
@@ -139,10 +118,11 @@
 
 (defn get-contents
   "Returns a gopher menu or file stream."
-  [base-dir path]
+  [base-dir path & {:keys [hostname port item-type-map]
+                    :or {hostname "localhost" port 70 item-type-map {}}}]
   (let [file (io/file base-dir (normalize-relative-path path))]
     (if (is-child-path? base-dir (.getPath file))
       (cond
-        (.isDirectory file) (read-directory (or path "") file)
-        (.isFile file) (read-file file))
+        (.isDirectory file) (read-directory path file hostname port item-type-map)
+        (.isFile file) (read-file file item-type-map))
       (response/menu-entity (core/info "Access denied.")))))

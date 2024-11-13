@@ -60,10 +60,6 @@ gooφ has a built-in filesystem module with gophermap support.
 	-> -(((---(((--------
 	-> .
 
-Hostname and port are specified in the configuration file (config.edn).
-gooφ uses [confick](https://github.com/20centaurifux/confick) for configuration
-management.
-
 ### redirection module
 
 URLs are displayed on an HTML redirection page.
