@@ -117,10 +117,7 @@
       [category :as req]
       (search-category category (:query req))))"
   [& routes]
-  (let [routes# (mapv eval
-                      (map #(cons `->route %)
-                           routes))]
-    `(fn [request#]
-       (some (fn [r#]
-               (r# request#))
-             ~routes#))))
+  `(fn [request#]
+     (some (fn [r#]
+             (r# request#))
+           ~(mapv #(cons '->route %) routes))))
