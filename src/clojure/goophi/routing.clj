@@ -120,4 +120,4 @@
   `(fn [request#]
      (some (fn [r#]
              (r# request#))
-           ~(mapv #(cons '->route %) routes))))
+           ~(mapv #(cons #'->route %) routes))))
