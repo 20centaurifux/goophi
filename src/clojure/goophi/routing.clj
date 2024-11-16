@@ -68,13 +68,13 @@
        (split-vars (conj param-bindings top) req-bindings (rest vars)))
      (list param-bindings req-bindings))))
 
-(defmacro ->route
+(defmacro route
   "Returns a function that takes a request map as argument. The function
   evaluates body and returns the value of the expression if pattern is
   matching the request path. Parameters are bound to vars.
 
   Example:
-    (->route
+    (route
      \"/blog/posts/:id\"
      [id]
      (get-post id))
@@ -82,33 +82,30 @@
   Use the :as keyword to assign the entire request map to a symbol.
 
   Example:
-    (->route
+    (route
      \"/blog/:category/search\"
      [category :as req]
      (search-category category (:query req)))"
   [pattern vars & body]
   (let [r# (compile-pattern pattern)
         [param-bindings# req-bindings#] (split-vars vars)]
-    `(fn [m#]
-       (let [request# (if (instance? String m#)
-                        {:path m#}
-                        m#)]
-         (when-let [match# (matches ~r# (:path request#))]
-           (let [~param-bindings# (take
-                                   ~(count param-bindings#)
-                                   (vals (:params match#)))
-                 ~req-bindings# (repeat
-                                 ~(count req-bindings#)
-                                 (merge request# match#))]
-             (do ~@body)))))))
+    `(fn [req#]
+       (when-let [match# (matches ~r# (:path req#))]
+         (let [~param-bindings# (take
+                                 ~(count param-bindings#)
+                                 (vals (:params match#)))
+               ~req-bindings# (repeat
+                               ~(count req-bindings#)
+                               (merge req# match#))]
+           (do ~@body))))))
 
-(defmacro ->routes
+(defmacro routes
   "Returns a function that takes a request map as argument. The function
   evaluates the body of the first route matching the request path and
   returns the value of the expression. Parameters are bound to vars.
 
   Example:
-    (->routes
+    (routes
      (\"/blog/posts/:id\"
       [id]
       (get-post id))
@@ -120,4 +117,4 @@
   `(fn [request#]
      (some (fn [r#]
              (r# request#))
-           ~(mapv #(cons #'->route %) routes))))
+           ~(mapv #(cons #'route %) routes))))

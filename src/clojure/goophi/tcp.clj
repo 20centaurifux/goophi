@@ -9,13 +9,12 @@
 (defonce ^:private transfer-chunk-size 8192)
 (defonce ^:private timeout-millis 5000)
 
-(defn- handle-request
-  [f request]
-  (try
-    (if-let [response (f request)]
-      response
-      (menu-entity (core/info "Not Found.")))
-    (catch Exception _ (menu-entity (core/info "Internal Server Error.")))))
+(defn wrap-response
+  "Returns a function that takes a request map as argument. Evaluates handler
+   and adds the result to the request map with the key :response."
+  [handler]
+  (fn [req]
+    (assoc req :response (handler req))))
 
 (defn- put-response!
   [in out]
@@ -39,9 +38,18 @@
   [data]
   (> (count data) max-request))
 
-(defn ->gopher-handler
+(defn- execute-handler
+  [handler req]
+  (try
+    (let [{:keys [response]} (handler req)]
+      (if response
+        response
+        (menu-entity (core/info "Not Found."))))
+    (catch Exception _ (menu-entity (core/info "Internal Server Error.")))))
+
+(defn aleph-handler
   "Creates an Aleph handler."
-  [f]
+  [handler]
   (fn [s info]
     (let [request (select-keys info [:remote-addr])]
       (d/chain
@@ -56,7 +64,7 @@
                    (s/put! s (menu-entity (core/info "Request too long.")))
                    (if (seq r)
                      (let [request' (assoc request :path (->path buffer'))]
-                       (put-response! (handle-request f request') s))
+                       (put-response! (execute-handler handler request') s))
                      (d/recur buffer'))))))))
        (fn [_]
          (s/close! s))))))

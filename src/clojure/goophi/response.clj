@@ -14,13 +14,13 @@
   (satisfies? Response x))
 
 (defn- dump
-  [response f & {:keys [buffer-size] :or {buffer-size 8192}}]
+  [response transform & {:keys [buffer-size] :or {buffer-size 8192}}]
   (loop [buffer (byte-array buffer-size)]
     (let [available (take! response buffer)]
       (when (>= available 0)
         (-> (take available buffer)
             byte-array
-            f
+            transform
             print)
         (recur buffer)))))
 

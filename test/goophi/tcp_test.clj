@@ -6,7 +6,7 @@
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [goophi.response :refer [binary-entity]]
-            [goophi.tcp :refer [->gopher-handler]]
+            [goophi.tcp :refer [aleph-handler wrap-response]]
             [manifold.stream :as s]))
 
 (defonce ^:private port 7070)
@@ -31,16 +31,16 @@
 ;;; gopher server
 
 (defn- start-server
-  [f port]
-  (tcp/start-server (->gopher-handler f) {:port port}))
+  [handler port]
+  (tcp/start-server (aleph-handler handler) {:port port}))
 
 ;;; tests
 
-(deftest aleph
+(deftest tcp-server
   (letfn [(return-selector [req]
             (-> req :path .getBytes java.io.ByteArrayInputStream.))]
     (testing "roundtrip"
-      (let [s (start-server return-selector port)
+      (let [s (start-server (wrap-response return-selector) port)
             property (prop/for-all [selector selector-gen]
                                    (let [c (local-client port)]
                                      (put-request! c selector)
@@ -50,7 +50,7 @@
 
     (testing "client timeout"
       (with-redefs [goophi.tcp/timeout-millis 500]
-        (let [s (start-server return-selector port)
+        (let [s (start-server (wrap-response return-selector) port)
               c (local-client port)
               response (take-response! c)
               lines (str/split-lines response)]
@@ -60,7 +60,9 @@
           (.close s))))
 
     (testing "handler throws exception"
-      (let [s (start-server (fn [_] (throw (Exception.))) port)
+      (let [s (start-server (wrap-response
+                             (fn [_] (throw (Exception.))))
+                            port)
             c (local-client port)]
         (put-request! c "/")
         (let [response (take-response! c)
@@ -71,7 +73,9 @@
           (.close s))))
 
     (testing "handler returns nil"
-      (let [s (start-server (constantly nil) port)
+      (let [s (start-server (wrap-response
+                             (constantly nil))
+                            port)
             c (local-client port)]
         (put-request! c "/")
         (let [response (take-response! c)
@@ -82,28 +86,10 @@
           (.close s))))
 
     (testing "handler returns empty response"
-      (let [s (start-server (fn [_] (binary-entity (byte-array 0))) port)
+      (let [s (start-server (wrap-response
+                             (fn [_] (binary-entity (byte-array 0))))
+                            port)
             c (local-client port)]
         (put-request! c "/")
         (is (nil? @(s/take! c)))
         (.close s)))))
-
-(deftest aleph-with-middleware
-  (testing "roundtrip"
-    (let [counter (volatile! 0)]
-      (letfn [(assoc-body [req]
-                (assoc req :body (-> req :path str/reverse)))
-              (stream-body [req]
-                (-> req :body .getBytes java.io.ByteArrayInputStream.))
-              (inc-counter [req]
-                (vswap! counter inc)
-                req)]
-        (let [s (start-server (comp inc-counter stream-body assoc-body) port)
-              property (prop/for-all [selector selector-gen]
-                                     (let [c (local-client port)]
-                                       (put-request! c selector)
-                                       (= (str/reverse selector)
-                                          (take-response! c))))]
-          (is (:result (tc/quick-check 100 property)))
-          (is (= 100 @counter))
-          (.close s))))))
