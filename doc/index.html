@@ -2865,20 +2865,20 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>zcfux/goophi -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/20centaurifux/goophi">zcfux/goophi</a></h1><h2 class="project-version">0.1.3</h2><br /><p>Gopher protocol library.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.11.1</td></tr><tr><td class="dep-name">instaparse</td><td class="dotted"><hr /></td><td class="dep-version">1.4.12</td></tr><tr><td class="dep-name">org.clojure/core.async</td><td class="dotted"><hr /></td><td class="dep-version">1.6.673</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">1.0.257</td></tr><tr><td class="dep-name">hiccup</td><td class="dotted"><hr /></td><td class="dep-version">1.0.5</td></tr><tr><td class="dep-name">zcfux/confick</td><td class="dotted"><hr /></td><td class="dep-version">0.1.4</td></tr><tr><td class="dep-name">manifold</td><td class="dotted"><hr /></td><td class="dep-version">0.3.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#goophi.core">goophi.core</a></li><li><a href="#goophi.redirect">goophi.redirect</a></li><li><a href="#goophi.fs">goophi.fs</a></li><li><a href="#goophi.response">goophi.response</a></li><li><a href="#goophi.tcp">goophi.tcp</a></li><li><a href="#goophi.routing">goophi.routing</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.core" name="goophi.core"><h1 class="project-name">goophi.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</script><title>de.dixieflatline/goophi -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/20centaurifux/goophi">de.dixieflatline/goophi</a></h1><h2 class="project-version">0.2.0-SNAPSHOT</h2><br /><p>Gopher protocol library.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.11.1</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">1.1.266</td></tr><tr><td class="dep-name">instaparse</td><td class="dotted"><hr /></td><td class="dep-version">1.5.0</td></tr><tr><td class="dep-name">hiccup</td><td class="dotted"><hr /></td><td class="dep-version">1.0.5</td></tr><tr><td class="dep-name">manifold</td><td class="dotted"><hr /></td><td class="dep-version">0.4.3</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#goophi.core">goophi.core</a></li><li><a href="#goophi.fs">goophi.fs</a></li><li><a href="#goophi.redirect">goophi.redirect</a></li><li><a href="#goophi.response">goophi.response</a></li><li><a href="#goophi.routing">goophi.routing</a></li><li><a href="#goophi.tcp">goophi.tcp</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.core" name="goophi.core"><h1 class="project-name">goophi.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns goophi.core
   (:require [clojure.string :as s]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- sanitize-str
   [text]
   (if (s/blank? text)  text))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- request-matches
+</td><td class="codes"><pre class="brush: clojure">(defn- match-request
   [request]
   (re-matches #&quot;^([\u0020-\u007e]*)\t?([\u0020-\u007e]+)?$&quot; request))</pre></td></tr><tr><td class="docs"><p>Returns path and query of a gopher request. Only printable ASCII characters
-  are accepted.</p>
+are accepted.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn parse-request
   [request]
-  (when-let [match (request-matches request)]
+  (when-let [match (match-request request)]
     (map sanitize-str (rest match))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- item-&gt;seq
   [item]
@@ -2887,8 +2887,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn- item-&gt;str
   [item]
   (s/join &quot;\t&quot; (item-&gt;seq item)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defrecord Item
-           [type display-text selector hostname port]
+</td><td class="codes"><pre class="brush: clojure">(defrecord Item [type display-text selector hostname port]
   Object
   (toString [item]
     (str (item-&gt;str item) &quot;\r\n&quot;)))</pre></td></tr><tr><td class="docs"><p>Tests if x is an Item.</p>
@@ -2899,73 +2898,44 @@ net.brehaut.ClojureTools = (function (SH) {
   ([type display-text selector hostname port]
    (Item. type display-text selector hostname port))
   ([type display-text selector hostname]
-   (Item. type display-text selector hostname 70)))</pre></td></tr><tr><td class="docs"><p>Constructs an information item.</p>
+   (-&gt;Item type display-text selector hostname 70)))</pre></td></tr><tr><td class="docs"><p>Constructs an information item.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn info
   [text]
-  (-&gt;Item &quot;i&quot; text &quot;fake&quot; &quot;(NULL)&quot; 0))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.redirect" name="goophi.redirect"><h1 class="project-name">goophi.redirect</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns goophi.redirect
-  (:use hiccup.core hiccup.page))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- page
-  [url]
-  (html5 {:lang &quot;en&quot;}
-         [:head
-          [:meta {:charset &quot;UTF-8&quot;}]
-          [:meta {:http-equiv &quot;Refresh&quot;
-                  :content (str &quot;1; URL=&quot; url)}]
-          [:title &quot;Redirect&quot;]]
-         [:body
-          &quot;Redirecting to &quot;
-          [:a {:href url} url]]))</pre></td></tr><tr><td class="docs"><p>Generates an HTML page redirecting to url.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn redirect
-  [url]
-  (java.io.ByteArrayInputStream. (.getBytes (page url))))</pre></td></tr><tr><td class="docs"><p>Extracts url from a URL selector.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn selector-&gt;url
-  [selector]
-  (let [url (subs selector 4)]
-    (when-not (clojure.string/blank? url)
-      (try
-        (clojure.java.io/as-url url)
-        (catch Exception _)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.fs" name="goophi.fs"><h1 class="project-name">goophi.fs</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  (-&gt;Item &quot;i&quot; text &quot;fake&quot; &quot;(NULL)&quot; 0))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.fs" name="goophi.fs"><h1 class="project-name">goophi.fs</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns goophi.fs
-  (:require [goophi.core :as core]
-            [goophi.response :as response]
-            [confick.core :as config]
-            [clojure.java.io :as io]
-            [clojure.string :as s])
-  (:import [java.net URLConnection]
-           [java.io FileInputStream]
-           [java.nio.file Paths]))</pre></td></tr><tr><td class="docs">
+  (:require [clojure.java.io :as io]
+            [clojure.string :as s]
+            [goophi.core :as goo]
+            [goophi.response :as rsp])
+  (:import java.io.FileInputStream
+           java.net.URLConnection
+           java.nio.file.Paths))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- file-extension
   [filename]
   (-&gt; (s/split filename #&quot;\.&quot;)
       last
       s/lower-case))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- file-extension-map
-  []
-  (config/bind [^{:default {}} extensions [:goophi :fs :file-extensions]]
-    (-&gt; extensions
-        (update &quot;g&quot; #(conj % &quot;gif&quot;))
-        (update &quot;0&quot; #(conj % &quot;xml&quot; &quot;json&quot;)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- map-extension
-  [filename]
+  [filename item-type-map]
   (let [ext (file-extension filename)]
-    (some (fn [[t e]] (when (some #(= ext %) e) t))
-          (file-extension-map))))</pre></td></tr><tr><td class="docs">
+    (some (fn [[t coll]]
+            (when (some #(= ext %) coll) t))
+          item-type-map)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- map-mime
   [filename]
-  (let [mime (or (URLConnection/guessContentTypeFromName filename))]
+  (let [mime (or (URLConnection/guessContentTypeFromName filename) )]
     (cond
       (s/starts-with? mime &quot;text/&quot;) &quot;0&quot;
       (s/starts-with? mime &quot;image/&quot;) &quot;i&quot;)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- guess-file-type
-  [filename]
-  (or (map-extension filename)
+  [filename item-type-map]
+  (or (map-extension filename item-type-map)
       (map-mime filename)
       &quot;9&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- map-file-type
-  [^java.io.File file]
+  [^java.io.File file item-type-map]
   (if (.isFile file)
-    (guess-file-type (.getName file))
+    (guess-file-type (.getName file) item-type-map)
     &quot;1&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- -&gt;selector
   [parent filename]
@@ -2974,59 +2944,50 @@ net.brehaut.ClojureTools = (function (SH) {
     (cond-&gt;&gt; selector
       (not (s/starts-with? selector &quot;/&quot;)) (str &quot;/&quot;))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- file-&gt;item
-  [parent ^java.io.File file]
-  (config/bind [^:required hostname [:goophi :hostname]
-                ^{:default 70} port [:goophi :port]]
-    (core/-&gt;Item (map-file-type file)
-                 (.getName file)
-                 (-&gt;selector parent (.getName file))
-                 hostname
-                 port)))</pre></td></tr><tr><td class="docs">
+  [parent ^java.io.File file hostname port item-type-map]
+  (goo/-&gt;Item (map-file-type file item-type-map)
+              (.getName file)
+              (-&gt;selector parent (.getName file))
+              hostname
+              port))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- list-directory
-  [selector ^java.io.File dir]
+  [selector ^java.io.File dir hostname port item-type-map]
   (-&gt;&gt; (.listFiles dir)
        sort
-       (map #(str (file-&gt;item selector %)))
+       (map #(str (file-&gt;item selector % hostname port item-type-map)))
        s/join
-       response/menu-entity))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- replace-keyword
-  [text]
-  (config/bind [^:required hostname [:goophi :hostname]
-                ^{:default 70} port [:goophi :port]]
-    (cond
-      (= text &quot;@hostname&quot;) hostname
-      (= text &quot;@port&quot;) port
-      :else text)))</pre></td></tr><tr><td class="docs">
+       rsp/menu-entity))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- transform-gophermap-parts
-  [parts]
+  [parts keywords]
   (concat (take 3 parts)
-          (map replace-keyword (take-last 2 parts))))</pre></td></tr><tr><td class="docs">
+          (map #(get keywords % %) (take-last 2 parts))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- convert-line
-  [line]
-  (if-let [match (re-matches #&quot;^([a-zA-Z0-9])(.+)\t(.+)\t(.+)\t(\d+|@port)$&quot; (s/trim line))]
-    (apply core/-&gt;Item (transform-gophermap-parts (rest match)))
-    (core/info line)))</pre></td></tr><tr><td class="docs">
+  [line keywords]
+  (if-let [match (re-matches #&quot;^(?i)([a-z0-9\+:;&lt;])(.+)\t(.+)\t(.+)\t(\d+|@port)$&quot;
+                             (s/trim line))]
+    (apply goo/-&gt;Item (transform-gophermap-parts (rest match) keywords))
+    (goo/info line)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- read-gophermap
-  [file]
+  [file hostname port]
   (with-open [rdr (io/reader file)]
     (-&gt;&gt; (line-seq rdr)
-         (map (comp str convert-line))
+         (map (comp str #(convert-line % {&quot;@hostname&quot; hostname &quot;@port&quot; port})))
          s/join
-         response/menu-entity)))</pre></td></tr><tr><td class="docs">
+         rsp/menu-entity)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- read-directory
-  [selector dir]
+  [selector dir hostname port item-type-map]
   (let [gophermap (io/file dir &quot;gophermap&quot;)]
     (if (.exists gophermap)
-      (read-gophermap gophermap)
-      (list-directory selector dir))))</pre></td></tr><tr><td class="docs">
+      (read-gophermap gophermap hostname port)
+      (list-directory selector dir hostname port item-type-map))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- read-file
-  [^java.io.File file]
+  [^java.io.File file item-type-map]
   (let [in (FileInputStream. file)]
-    (if (= &quot;0&quot; (guess-file-type (.getPath file)))
-      (response/text-file-entity in)
-      (response/binary-entity in))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- ^java.nio.file.Path -&gt;Path
-  [path]
+    (if (= &quot;0&quot; (guess-file-type (.getPath file) item-type-map))
+      (rsp/text-file-entity in)
+      (rsp/binary-entity in))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- -&gt;Path
+  ^java.nio.file.Path [path]
   (.normalize
    (-&gt; (.toURI (io/file path))
        Paths/get)))</pre></td></tr><tr><td class="docs">
@@ -3043,17 +3004,44 @@ net.brehaut.ClojureTools = (function (SH) {
     (s/starts-with? path &quot;/&quot;) (str &quot;.&quot; path)
     :else path))</pre></td></tr><tr><td class="docs"><p>Returns a gopher menu or file stream.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-contents
-  [base-dir path]
+  [base-dir path &amp; {:keys [hostname port item-type-map]
+                    :or {hostname &quot;localhost&quot; port 70 item-type-map {}}}]
   (let [file (io/file base-dir (normalize-relative-path path))]
     (if (is-child-path? base-dir (.getPath file))
       (cond
-        (.isDirectory file) (read-directory (or path &quot;&quot;) file)
-        (.isFile file) (read-file file))
-      (response/menu-entity (core/info &quot;Access denied.&quot;)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.response" name="goophi.response"><h1 class="project-name">goophi.response</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+        (.isDirectory file) (read-directory path file hostname port item-type-map)
+        (.isFile file) (read-file file item-type-map))
+      (rsp/menu-entity (goo/info &quot;Access denied.&quot;)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.redirect" name="goophi.redirect"><h1 class="project-name">goophi.redirect</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns goophi.redirect
+  (:require [clojure.java.io :as io]
+            [clojure.string :as s]
+            [hiccup.page :as hic]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- page
+  [url]
+  (hic/html5 {:lang &quot;en&quot;}
+             [:head
+              [:meta {:charset &quot;UTF-8&quot;}]
+              [:meta {:http-equiv &quot;Refresh&quot;
+                      :content (str &quot;1; URL=&quot; url)}]
+              [:title &quot;Redirect&quot;]]
+             [:body
+              &quot;Redirecting to &quot;
+              [:a {:href url} url]]))</pre></td></tr><tr><td class="docs"><p>Generates an HTML page redirecting to url.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn redirect
+  [url]
+  (java.io.ByteArrayInputStream. (.getBytes (page url))))</pre></td></tr><tr><td class="docs"><p>Extracts url from a URL selector.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn selector-&gt;url
+  [selector]
+  (let [url (subs selector 4)]
+    (when-not (s/blank? url)
+      (try
+        (io/as-url url)
+        (catch Exception _)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.response" name="goophi.response"><h1 class="project-name">goophi.response</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns goophi.response
-  (:require [goophi.core])
-  (:import [goophi.core Item]
-           [goophi.textfileentity TextfileEntityInputStream]))</pre></td></tr><tr><td class="docs"><p>Response data source.</p>
+  (:require [clojure.string :as s]
+            [goophi.core])
+  (:import goophi.core.Item
+           goophi.textfileentity.TextfileEntityInputStream))</pre></td></tr><tr><td class="docs"><p>Response data source.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Response
   (take! [in out]))</pre></td></tr><tr><td class="docs"><p>Returns true if x is a Response.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn Response?
@@ -3075,9 +3063,8 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn dumpx
   [response &amp; {:keys [columns] :or {columns 16}}]
   (dump response
-        #(str
-          (clojure.string/join &quot; &quot; (map (partial format &quot;0x%02x&quot;) %))
-          \newline)
+        #(str (s/join &quot; &quot; (map (partial format &quot;0x%02x&quot;) %))
+              \newline)
         :buffer-size columns))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(extend java.io.InputStream
   Response
@@ -3087,9 +3074,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(extend-protocol MenuEntityFactory
   java.lang.String
   (menu-entity [text]
-    (java.io.ByteArrayInputStream. (.getBytes (str
-                                               (clojure.string/trimr text)
-                                               &quot;\r\n.\r\n&quot;))))
+    (java.io.ByteArrayInputStream. (.getBytes (str (s/trimr text) &quot;\r\n.\r\n&quot;))))
   Item
   (menu-entity [item]
     (menu-entity (str item))))</pre></td></tr><tr><td class="docs"><p>Removes control characters and appends a period.</p>
@@ -3107,72 +3092,10 @@ net.brehaut.ClojureTools = (function (SH) {
     (java.io.ByteArrayInputStream. data))
   java.io.InputStream
   (binary-entity [in]
-    in))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.tcp" name="goophi.tcp"><h1 class="project-name">goophi.tcp</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns goophi.tcp
-  (:require [manifold.stream :as s]
-            [clojure.core.async :as async]
-            [goophi.core :as core]
-            [goophi.response :refer [take! menu-entity]]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defonce ^:private max-request 128)
-(defonce ^:private transfer-chunk-size 8192)
-(defonce ^:private timeout-millis 5000)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- put-response!
-  [in out]
-  (when in
-    (loop [buffer (byte-array transfer-chunk-size)]
-      (let [available (take! in buffer)]
-        (when (&gt;= available 0)
-          @(s/put! out (byte-array (take available buffer)))
-          (recur buffer))))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- route-request
-  [app request]
-  (try
-    (if-let [response (app request)]
-      response
-      (menu-entity (core/info &quot;Not found.&quot;)))
-    (catch Exception _ (menu-entity (core/info &quot;Internal Server Error.&quot;)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- request-str
-  [data]
-  (let [text (String. (byte-array data))]
-    (clojure.string/trimr text)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- split-bytes
-  [data separator]
-  (split-with (partial not= (byte separator)) data))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- exceeds-maximum?
-  [data]
-  (&gt; (count data) max-request))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- handle-connection
-  [in out app request]
-  (future
-    (loop [buffer nil]
-      (if-let [data (async/alt!!
-                      [in (async/timeout timeout-millis)]
-                      ([v _] v))]
-        (let [[l r] (split-bytes data \newline)
-              buffer' (concat buffer l)]
-          (if (exceeds-maximum? buffer')
-            (s/put! out (menu-entity (core/info &quot;Request too long.&quot;)))
-            (if-not (empty? r)
-              (put-response! (route-request
-                              app
-                              (assoc request :path (request-str l)))
-                             out)
-              (recur buffer'))))
-        (s/put! out (menu-entity (core/info &quot;Connection timeout.&quot;)))))
-    (s/close! out)))</pre></td></tr><tr><td class="docs"><p>Creates an Aleph handler.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn -&gt;gopher-handler
-  [app]
-  (fn [out info]
-    (let [in (async/chan)]
-      (handle-connection
-       in
-       out
-       app
-       (select-keys info [:remote-addr]))
-      (s/connect out in))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.routing" name="goophi.routing"><h1 class="project-name">goophi.routing</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+    in))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.routing" name="goophi.routing"><h1 class="project-name">goophi.routing</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns goophi.routing
-  (:require [goophi.core :refer [parse-request]]
-            [clojure.string :as s]
+  (:require [clojure.string :as s]
+            [goophi.core :as goo]
             [instaparse.core :as insta]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defonce ^:private route-parser
   (insta/parser
@@ -3201,20 +3124,20 @@ net.brehaut.ClojureTools = (function (SH) {
        (filter #(= (first %) :param))
        (map (comp keyword second))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defrecord Pattern [tree regex params])</pre></td></tr><tr><td class="docs"><p>Compiles a pattern. Patterns may consist of literals, escaped
-  characters, wildcards (*) and parameters (:name). The syntax is
-  very similar to to Clout (https://github.com/weavejester/clout).
-  That's no surprise, because the code is similar too :)</p>
+characters, wildcards (*) and parameters (:name). The syntax is
+very similar to to Clout (https://github.com/weavejester/clout).
+That's no surprise, because the code is similar too :)</p>
 </td><td class="codes"><pre class="brush: clojure">(defn compile-pattern
   [pattern]
   (let [tree (insta/parse route-parser pattern)
         regex (tree-&gt;regex tree)
         params (params tree)]
     (Pattern. tree regex params)))</pre></td></tr><tr><td class="docs"><p>Tests if request is matching the pattern associated to route.
-  Returns a map containing path, query and matched parameters on
-  success.</p>
+Returns a map containing path, query and matched parameters on
+success.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn matches
   [route request]
-  (when-let [request' (parse-request request)]
+  (when-let [request' (goo/parse-request request)]
     (when-let [match (re-matches (:regex route) (first request'))]
       {:path (first request')
        :query (second request')
@@ -3228,60 +3151,113 @@ net.brehaut.ClojureTools = (function (SH) {
        (split-vars param-bindings (conj req-bindings (second vars)) (drop 2 vars))
        (split-vars (conj param-bindings top) req-bindings (rest vars)))
      (list param-bindings req-bindings))))</pre></td></tr><tr><td class="docs"><p>Returns a function that takes a request map as argument. The function
-  evaluates body and returns the value of the expression if pattern is
-  matching the request path. Parameters are bound to vars.</p>
+evaluates body and returns the value of the expression if pattern is
+matching the request path. Parameters are bound to vars.</p>
 
-<p>  Example:
-    (->route
-     "/blog/posts/:id"
-     [id]
-     (get-post id))</p>
+<p>Example:
+  (route
+   "/blog/posts/:id"
+   [id]
+   (get-post id))</p>
 
-<p>  Use the :as keyword to assign the entire request map to a symbol.</p>
+<p>Use the :as keyword to assign the entire request map to a symbol.</p>
 
-<p>  Example:
-    (->route
-     "/blog/:category/search"
-     [category :as req]
-     (search-category category (:query req)))</p>
-</td><td class="codes"><pre class="brush: clojure">(defmacro -&gt;route
+<p>Example:
+  (route
+   "/blog/:category/search"
+   [category :as req]
+   (search-category category (:query req)))</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro route
   [pattern vars &amp; body]
   (let [r# (compile-pattern pattern)
         [param-bindings# req-bindings#] (split-vars vars)]
-    `(fn [m#]
-       (let [request# (if (instance? String m#)
-                        {:path m#}
-                        m#)]
-         (when-let [match# (matches ~r# (:path request#))]
-           (let [~param-bindings# (take
-                                   ~(count param-bindings#)
-                                   (vals (:params match#)))
-                 ~req-bindings# (repeat
-                                 ~(count req-bindings#)
-                                 (merge request# match#))]
-             (do ~@body)))))))</pre></td></tr><tr><td class="docs"><p>Returns a function that takes a request map as argument. The function
-  evaluates the body of the first route matching the request path and
-  returns the value of the expression. Parameters are bound to vars.</p>
+    `(fn [req#]
+       (when-let [match# (matches ~r# (:path req#))]
+         (let [~param-bindings# (take
+                                 ~(count param-bindings#)
+                                 (vals (:params match#)))
+               ~req-bindings# (repeat
+                               ~(count req-bindings#)
+                               (merge req# match#))]
+           (do ~@body))))))</pre></td></tr><tr><td class="docs"><p>Returns a function that takes a request map as argument. The function
+evaluates the body of the first route matching the request path and
+returns the value of the expression. Parameters are bound to vars.</p>
 
-<p>  Example:
-    (->routes
-     ("/blog/posts/:id"
-      [id]
-      (get-post id))</p>
+<p>Example:
+  (routes
+   ("/blog/posts/:id"
+    [id]
+    (get-post id))</p>
 
-<pre><code> ("/blog/:category/search"
-  [category :as req]
-  (search-category category (:query req))))
-</code></pre>
-</td><td class="codes"><pre class="brush: clojure">(defmacro -&gt;routes
+<p>   ("/blog/:category/search"
+    [category :as req]
+    (search-category category (:query req))))</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro routes
   [&amp; routes]
-  (let [routes# (mapv eval
-                      (map #(cons `-&gt;route %)
-                           routes))]
-    `(fn [request#]
-       (some (fn [r#]
-               (r# request#))
-             ~routes#))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_goophi.core">goophi.core</li><li class="floating-toc-li" id="floating-toc_goophi.redirect">goophi.redirect</li><li class="floating-toc-li" id="floating-toc_goophi.fs">goophi.fs</li><li class="floating-toc-li" id="floating-toc_goophi.response">goophi.response</li><li class="floating-toc-li" id="floating-toc_goophi.tcp">goophi.tcp</li><li class="floating-toc-li" id="floating-toc_goophi.routing">goophi.routing</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  `(fn [request#]
+     (some (fn [r#]
+             (r# request#))
+           ~(mapv #(cons #'route %) routes))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#goophi.tcp" name="goophi.tcp"><h1 class="project-name">goophi.tcp</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns goophi.tcp
+  (:require [clojure.string :as str]
+            [goophi.core :as goo]
+            [goophi.response :as response :as rsp]
+            [manifold.deferred :as d]
+            [manifold.stream :as s]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defonce ^:private max-request 128)
+(defonce ^:private transfer-chunk-size 8192)
+(defonce ^:private timeout-millis 5000)</pre></td></tr><tr><td class="docs"><p>Returns a function that takes a request map as argument. Evaluates handler
+ and adds the result to the request map with the key :response.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn wrap-response
+  [handler]
+  (fn [req]
+    (assoc req :response (handler req))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- put-response!
+  [in out]
+  (when in
+    (d/loop [buffer (byte-array transfer-chunk-size)]
+      (let [available (rsp/take! in buffer)]
+        (when (pos? available)
+          (s/put! out (byte-array (take available buffer)))
+          (d/recur buffer))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- -&gt;path
+  [data]
+  (let [text (String. (byte-array data))]
+    (str/trimr text)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- split-bytes
+  [data separator]
+  (split-with #(not= % (byte separator)) data))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- exceeds-maximum?
+  [data]
+  (&gt; (count data) max-request))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- execute-handler
+  [handler req]
+  (try
+    (let [{:keys [response]} (handler req)]
+      (if response
+        response
+        (rsp/menu-entity (goo/info &quot;Not Found.&quot;))))
+    (catch Exception _ (rsp/menu-entity (goo/info &quot;Internal Server Error.&quot;)))))</pre></td></tr><tr><td class="docs"><p>Creates an Aleph handler.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn aleph-handler
+  [handler]
+  (fn [s info]
+    (let [request (select-keys info [:remote-addr])]
+      (d/chain
+       (d/loop [buffer []]
+         (d/let-flow [data (s/try-take! s nil timeout-millis ::timeout)]
+           (if (#{::timeout} data)
+             (s/put! s (rsp/menu-entity (goo/info &quot;Connection timeout.&quot;)))
+             (when data
+               (let [[l r] (split-bytes data \newline)
+                     buffer' (concat buffer l)]
+                 (if (exceeds-maximum? buffer')
+                   (s/put! s (rsp/menu-entity (goo/info &quot;Request too long.&quot;)))
+                   (if (seq r)
+                     (let [request' (assoc request :path (-&gt;path buffer'))]
+                       (put-response! (execute-handler handler request') s))
+                     (d/recur buffer'))))))))
+       (fn [_]
+         (s/close! s))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/clj-commons/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_goophi.core">goophi.core</li><li class="floating-toc-li" id="floating-toc_goophi.fs">goophi.fs</li><li class="floating-toc-li" id="floating-toc_goophi.redirect">goophi.redirect</li><li class="floating-toc-li" id="floating-toc_goophi.response">goophi.response</li><li class="floating-toc-li" id="floating-toc_goophi.routing">goophi.routing</li><li class="floating-toc-li" id="floating-toc_goophi.tcp">goophi.tcp</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
