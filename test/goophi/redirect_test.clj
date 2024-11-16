@@ -1,6 +1,6 @@
 (ns goophi.redirect-test
-  (:require [clojure.test :refer :all]
-            [goophi.redirect :refer :all]))
+  (:require [clojure.test :refer [deftest testing is]]
+            [goophi.redirect :refer [redirect selector->url]]))
 
 (deftest parse-selector
   (testing "valid URI selector"

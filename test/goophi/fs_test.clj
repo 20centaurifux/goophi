@@ -1,9 +1,9 @@
 (ns goophi.fs-test
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.test :refer :all]
-            [goophi.fs :refer :all]
-            [goophi.response :refer :all]))
+            [clojure.string :as s]
+            [clojure.test :refer [deftest testing is]]
+            [goophi.fs :refer [get-contents]]
+            [goophi.response :as rsp]))
 
 (defonce ^:private base-dir "./example-pub")
 (defonce ^:private hostname "example.org")
@@ -12,7 +12,7 @@
 (defn- roundtrip
   [selector]
   (-> (get-contents base-dir selector :hostname hostname :port port)
-      dumps
+      rsp/dumps
       with-out-str))
 
 (deftest directory-traversal
@@ -21,7 +21,7 @@
 
 (deftest menu
   (testing "gophermap"
-    (let [lines (str/split (roundtrip "") #"\r\n")]
+    (let [lines (s/split (roundtrip "") #"\r\n")]
       (is (= 4 (count lines)))
       (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
       (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
@@ -30,7 +30,7 @@
       (is (= "." (nth lines 3)))))
 
   (testing "listing"
-    (let [lines (str/split (roundtrip "docs") #"\r\n")]
+    (let [lines (s/split (roundtrip "docs") #"\r\n")]
       (is (= 3 (count lines)))
       (is (= (format "0hello.txt\t/docs/hello.txt\t%s\t%d" hostname port)
              (nth lines 0)))
@@ -51,11 +51,11 @@
       (is (= (stream->bytes r) (stream->bytes r')))))
 
   (testing "text"
-    (let [lines (str/split (slurp
-                            (io/file base-dir "docs" "hello.txt"))
-                           #"\n")
-          lines' (str/split (roundtrip "docs/hello.txt")
-                            #"\r\n")]
+    (let [lines (s/split (slurp
+                          (io/file base-dir "docs" "hello.txt"))
+                         #"\n")
+          lines' (s/split (roundtrip "docs/hello.txt")
+                          #"\r\n")]
       (is (= 3 (count lines)))
       (is (= 4 (count lines')))
       (is (= lines (take 3 lines')))

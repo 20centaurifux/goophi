@@ -1,9 +1,9 @@
 (ns goophi.core
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as s]))
 
 (defn- sanitize-str
   [text]
-  (if (str/blank? text) "" text))
+  (if (s/blank? text) "" text))
 
 (defn- match-request
   [request]
@@ -23,7 +23,7 @@
 
 (defn- item->str
   [item]
-  (str/join "\t" (item->seq item)))
+  (s/join "\t" (item->seq item)))
 
 (defrecord Item [type display-text selector hostname port]
   Object

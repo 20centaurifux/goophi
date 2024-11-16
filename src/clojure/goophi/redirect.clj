@@ -1,19 +1,19 @@
 (ns goophi.redirect
-  (:require [clojure.java.io :refer [as-url]]
-            [clojure.string :refer [blank?]]
-            [hiccup.page :refer [html5]]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as s]
+            [hiccup.page :as hic]))
 
 (defn- page
   [url]
-  (html5 {:lang "en"}
-         [:head
-          [:meta {:charset "UTF-8"}]
-          [:meta {:http-equiv "Refresh"
-                  :content (str "1; URL=" url)}]
-          [:title "Redirect"]]
-         [:body
-          "Redirecting to "
-          [:a {:href url} url]]))
+  (hic/html5 {:lang "en"}
+             [:head
+              [:meta {:charset "UTF-8"}]
+              [:meta {:http-equiv "Refresh"
+                      :content (str "1; URL=" url)}]
+              [:title "Redirect"]]
+             [:body
+              "Redirecting to "
+              [:a {:href url} url]]))
 
 (defn redirect
   "Generates an HTML page redirecting to url."
@@ -24,7 +24,7 @@
   "Extracts url from a URL selector."
   [selector]
   (let [url (subs selector 4)]
-    (when-not (blank? url)
+    (when-not (s/blank? url)
       (try
-        (as-url url)
+        (io/as-url url)
         (catch Exception _)))))

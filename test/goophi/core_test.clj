@@ -1,6 +1,6 @@
 (ns goophi.core-test
-  (:require [clojure.test :refer :all]
-            [goophi.core :refer :all]))
+  (:require [clojure.test :refer [deftest testing is]]
+            [goophi.core :refer [->Item Item? info parse-request]]))
 
 (deftest item
   (testing "->Item"

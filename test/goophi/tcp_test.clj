@@ -5,7 +5,7 @@
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [goophi.response :refer [binary-entity]]
+            [goophi.response :as rsp]
             [goophi.tcp :refer [aleph-handler wrap-response]]
             [manifold.stream :as s]))
 
@@ -61,7 +61,8 @@
 
     (testing "handler throws exception"
       (let [s (start-server (wrap-response
-                             (fn [_] (throw (Exception.))))
+                             (fn [_]
+                               (throw (Exception.))))
                             port)
             c (local-client port)]
         (put-request! c "/")
@@ -73,8 +74,7 @@
           (.close s))))
 
     (testing "handler returns nil"
-      (let [s (start-server (wrap-response
-                             (constantly nil))
+      (let [s (start-server (wrap-response (constantly nil))
                             port)
             c (local-client port)]
         (put-request! c "/")
@@ -87,7 +87,8 @@
 
     (testing "handler returns empty response"
       (let [s (start-server (wrap-response
-                             (fn [_] (binary-entity (byte-array 0))))
+                             (fn [_]
+                               (rsp/binary-entity (byte-array 0))))
                             port)
             c (local-client port)]
         (put-request! c "/")

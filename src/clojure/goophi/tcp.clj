@@ -1,7 +1,7 @@
 (ns goophi.tcp
-  (:require [clojure.string :refer [trimr]]
-            [goophi.core :as core]
-            [goophi.response :refer [take! menu-entity]]
+  (:require [clojure.string :as str]
+            [goophi.core :as goo]
+            [goophi.response :as response :as rsp]
             [manifold.deferred :as d]
             [manifold.stream :as s]))
 
@@ -20,7 +20,7 @@
   [in out]
   (when in
     (d/loop [buffer (byte-array transfer-chunk-size)]
-      (let [available (take! in buffer)]
+      (let [available (rsp/take! in buffer)]
         (when (pos? available)
           (s/put! out (byte-array (take available buffer)))
           (d/recur buffer))))))
@@ -28,7 +28,7 @@
 (defn- ->path
   [data]
   (let [text (String. (byte-array data))]
-    (trimr text)))
+    (str/trimr text)))
 
 (defn- split-bytes
   [data separator]
@@ -44,8 +44,8 @@
     (let [{:keys [response]} (handler req)]
       (if response
         response
-        (menu-entity (core/info "Not Found."))))
-    (catch Exception _ (menu-entity (core/info "Internal Server Error.")))))
+        (rsp/menu-entity (goo/info "Not Found."))))
+    (catch Exception _ (rsp/menu-entity (goo/info "Internal Server Error.")))))
 
 (defn aleph-handler
   "Creates an Aleph handler."
@@ -56,12 +56,12 @@
        (d/loop [buffer []]
          (d/let-flow [data (s/try-take! s nil timeout-millis ::timeout)]
            (if (#{::timeout} data)
-             (s/put! s (menu-entity (core/info "Connection timeout.")))
+             (s/put! s (rsp/menu-entity (goo/info "Connection timeout.")))
              (when data
                (let [[l r] (split-bytes data \newline)
                      buffer' (concat buffer l)]
                  (if (exceeds-maximum? buffer')
-                   (s/put! s (menu-entity (core/info "Request too long.")))
+                   (s/put! s (rsp/menu-entity (goo/info "Request too long.")))
                    (if (seq r)
                      (let [request' (assoc request :path (->path buffer'))]
                        (put-response! (execute-handler handler request') s))

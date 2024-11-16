@@ -1,6 +1,6 @@
 (ns goophi.routing
   (:require [clojure.string :as s]
-            [goophi.core :refer [parse-request]]
+            [goophi.core :as goo]
             [instaparse.core :as insta]))
 
 (defonce ^:private route-parser
@@ -52,7 +52,7 @@
   Returns a map containing path, query and matched parameters on
   success."
   [route request]
-  (when-let [request' (parse-request request)]
+  (when-let [request' (goo/parse-request request)]
     (when-let [match (re-matches (:regex route) (first request'))]
       {:path (first request')
        :query (second request')

@@ -1,6 +1,6 @@
 (ns goophi.routing-test
   (:require [clojure.test :refer [deftest testing is]]
-            [goophi.routing :refer [routes route]]))
+            [goophi.routing :refer [route routes]]))
 
 (defn- execute-handler
   [handler path]

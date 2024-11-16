@@ -1,9 +1,14 @@
 (ns goophi.response-test
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
-            [clojure.test :refer :all]
+            [clojure.test :refer [deftest testing is]]
             [goophi.core :refer [info]]
-            [goophi.response :refer :all]))
+            [goophi.response :refer [binary-entity
+                                     dumps
+                                     dumpx
+                                     menu-entity
+                                     Response?
+                                     text-file-entity]]))
 
 (defonce ^:private base-dir "./example-pub")
 

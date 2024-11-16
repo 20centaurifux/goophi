@@ -1,8 +1,8 @@
 (ns goophi.response
-  (:require [clojure.string :refer [join trimr]]
+  (:require [clojure.string :as s]
             [goophi.core])
-  (:import [goophi.core Item]
-           [goophi.textfileentity TextfileEntityInputStream]))
+  (:import goophi.core.Item
+           goophi.textfileentity.TextfileEntityInputStream))
 
 (defprotocol Response
   "Response data source."
@@ -33,7 +33,7 @@
   "Reads response & prints hexdump to *out*."
   [response & {:keys [columns] :or {columns 16}}]
   (dump response
-        #(str (join " " (map (partial format "0x%02x") %))
+        #(str (s/join " " (map (partial format "0x%02x") %))
               \newline)
         :buffer-size columns))
 
@@ -48,7 +48,7 @@
 (extend-protocol MenuEntityFactory
   java.lang.String
   (menu-entity [text]
-    (java.io.ByteArrayInputStream. (.getBytes (str (trimr text) "\r\n.\r\n"))))
+    (java.io.ByteArrayInputStream. (.getBytes (str (s/trimr text) "\r\n.\r\n"))))
   Item
   (menu-entity [item]
     (menu-entity (str item))))
