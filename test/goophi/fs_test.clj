@@ -21,13 +21,14 @@
 
 (deftest menu
   (testing "gophermap"
-    (let [lines (s/split (roundtrip "") #"\r\n")]
-      (is (= 4 (count lines)))
-      (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
-      (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
-      (is (= (format "1docs\tdocs\t%s\t%d" hostname port)
-             (nth lines 2)))
-      (is (= "." (nth lines 3)))))
+    (doseq [selector ["" "gophermap"]]
+      (let [lines (s/split (roundtrip selector) #"\r\n")]
+        (is (= 4 (count lines)))
+        (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
+        (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
+        (is (= (format "1docs\tdocs\t%s\t%d" hostname port)
+               (nth lines 2)))
+        (is (= "." (nth lines 3))))))
 
   (testing "listing"
     (let [lines (s/split (roundtrip "docs") #"\r\n")]

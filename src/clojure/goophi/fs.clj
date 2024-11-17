@@ -109,18 +109,17 @@
     (and (>= (.getNameCount child') (.getNameCount parent'))
          (.startsWith child' parent'))))
 
-(defn- normalize-relative-path
+(defn- normalize-path
   [path]
-  (cond
-    (nil? path) ""
-    (s/starts-with? path "/") (str "." path)
-    :else path))
+  (-> (or path "")
+      (s/replace #"^/" "./")
+      (s/replace #"gophermap$" "")))
 
 (defn get-contents
   "Returns a gopher menu or file stream."
   [base-dir path & {:keys [hostname port item-type-map]
                     :or {hostname "localhost" port 70 item-type-map {}}}]
-  (let [file (io/file base-dir (normalize-relative-path path))]
+  (let [file (io/file base-dir (normalize-path path))]
     (if (is-child-path? base-dir (.getPath file))
       (cond
         (.isDirectory file) (read-directory path file hostname port item-type-map)
