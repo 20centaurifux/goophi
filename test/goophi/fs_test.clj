@@ -39,6 +39,13 @@
              (nth lines 1)))
       (is (= "." (nth lines 2))))))
 
+(deftest not-found
+  (testing "directory not found"
+    (is (nil? (get-contents base-dir "./abc"))))
+
+  (testing "file not found"
+    (is (nil? (get-contents base-dir "abc.txt")))))
+
 (defn- stream->bytes
   [in]
   (with-open [out (java.io.ByteArrayOutputStream.)]
