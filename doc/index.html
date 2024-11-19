@@ -2997,16 +2997,15 @@ are accepted.</p>
         child' (-&gt;Path child)]
     (and (&gt;= (.getNameCount child') (.getNameCount parent'))
          (.startsWith child' parent'))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- normalize-relative-path
+</td><td class="codes"><pre class="brush: clojure">(defn- normalize-path
   [path]
-  (cond
-    (nil? path) 
-    (s/starts-with? path &quot;/&quot;) (str &quot;.&quot; path)
-    :else path))</pre></td></tr><tr><td class="docs"><p>Returns a gopher menu or file stream.</p>
+  (-&gt; (or path )
+      (s/replace #&quot;^/&quot; &quot;./&quot;)
+      (s/replace #&quot;gophermap$&quot; )))</pre></td></tr><tr><td class="docs"><p>Returns a gopher menu or file stream.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-contents
   [base-dir path &amp; {:keys [hostname port item-type-map]
                     :or {hostname &quot;localhost&quot; port 70 item-type-map {}}}]
-  (let [file (io/file base-dir (normalize-relative-path path))]
+  (let [file (io/file base-dir (normalize-path path))]
     (if (is-child-path? base-dir (.getPath file))
       (cond
         (.isDirectory file) (read-directory path file hostname port item-type-map)
@@ -3041,34 +3040,25 @@ are accepted.</p>
   (:require [clojure.string :as s]
             [goophi.core])
   (:import goophi.core.Item
-           goophi.textfileentity.TextfileEntityInputStream))</pre></td></tr><tr><td class="docs"><p>Response data source.</p>
-</td><td class="codes"><pre class="brush: clojure">(defprotocol Response
-  (take! [in out]))</pre></td></tr><tr><td class="docs"><p>Returns true if x is a Response.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn Response?
-  [x]
-  (satisfies? Response x))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- dump
-  [response transform &amp; {:keys [buffer-size] :or {buffer-size 8192}}]
+           goophi.textfileentity.TextfileEntityInputStream))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- print-stream
+  [stream transform &amp; {:keys [buffer-size] :or {buffer-size 8192}}]
   (loop [buffer (byte-array buffer-size)]
-    (let [available (take! response buffer)]
-      (when (&gt;= available 0)
-        (-&gt; (take available buffer)
-            byte-array
+    (let [available (.read stream buffer)]
+      (when (pos? available)
+        (-&gt; (byte-array available buffer)
             transform
             print)
-        (recur buffer)))))</pre></td></tr><tr><td class="docs"><p>Reads response as string &amp; prints it to <em>out</em>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn dumps
-  [response]
-  (dump response slurp))</pre></td></tr><tr><td class="docs"><p>Reads response &amp; prints hexdump to <em>out</em>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn dumpx
-  [response &amp; {:keys [columns] :or {columns 16}}]
-  (dump response
-        #(str (s/join &quot; &quot; (map (partial format &quot;0x%02x&quot;) %))
-              \newline)
-        :buffer-size columns))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(extend java.io.InputStream
-  Response
-  {:take! #(.read % %2)})</pre></td></tr><tr><td class="docs"><p>Appends a period to the response.</p>
+        (recur buffer)))))</pre></td></tr><tr><td class="docs"><p>Reads all contents of stream and &amp; prints it to <em>out</em>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn print-text-stream
+  [stream]
+  (print-stream stream slurp))</pre></td></tr><tr><td class="docs"><p>Reads all contents of stream &amp; prints hexdump to <em>out</em>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn print-binary-stream
+  [stream &amp; {:keys [columns] :or {columns 16}}]
+  (print-stream stream
+                #(str (s/join &quot; &quot; (map (partial format &quot;0x%02x&quot;) %))
+                      \newline)
+                :buffer-size columns))</pre></td></tr><tr><td class="docs"><p>Adds a final line with a period.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol MenuEntityFactory
   (menu-entity [in]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(extend-protocol MenuEntityFactory
@@ -3077,7 +3067,7 @@ are accepted.</p>
     (java.io.ByteArrayInputStream. (.getBytes (str (s/trimr text) &quot;\r\n.\r\n&quot;))))
   Item
   (menu-entity [item]
-    (menu-entity (str item))))</pre></td></tr><tr><td class="docs"><p>Removes control characters and appends a period.</p>
+    (menu-entity (str item))))</pre></td></tr><tr><td class="docs"><p>Removes control characters and appends a final line with a period.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol TextfileEntityFactory
   (text-file-entity [source]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(extend-protocol TextfileEntityFactory
@@ -3085,7 +3075,7 @@ are accepted.</p>
   (text-file-entity [in]
     (TextfileEntityInputStream. in)))</pre></td></tr><tr><td class="docs"><p>Bypasses binary data.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol BinaryFactory
-  (binary-entity [source]))</pre></td></tr><tr><td class="docs">
+  (binary-entity [in]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(extend-protocol BinaryFactory
   (Class/forName &quot;[B&quot;)
   (binary-entity [data]
@@ -3205,21 +3195,12 @@ returns the value of the expression. Parameters are bound to vars.</p>
             [manifold.deferred :as d]
             [manifold.stream :as s]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defonce ^:private max-request 128)
-(defonce ^:private transfer-chunk-size 8192)
 (defonce ^:private timeout-millis 5000)</pre></td></tr><tr><td class="docs"><p>Returns a function that takes a request map as argument. Evaluates handler
  and adds the result to the request map with the key :response.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn wrap-response
   [handler]
   (fn [req]
     (assoc req :response (handler req))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- put-response!
-  [in out]
-  (when in
-    (d/loop [buffer (byte-array transfer-chunk-size)]
-      (let [available (rsp/take! in buffer)]
-        (when (pos? available)
-          (s/put! out (byte-array (take available buffer)))
-          (d/recur buffer))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- -&gt;path
   [data]
   (let [text (String. (byte-array data))]
@@ -3253,8 +3234,10 @@ returns the value of the expression. Parameters are bound to vars.</p>
                  (if (exceeds-maximum? buffer')
                    (s/put! s (rsp/menu-entity (goo/info &quot;Request too long.&quot;)))
                    (if (seq r)
-                     (let [request' (assoc request :path (-&gt;path buffer'))]
-                       (put-response! (execute-handler handler request') s))
+                     (with-open [response (execute-handler handler
+                                                           (assoc request
+                                                                  :path (-&gt;path buffer')))]
+                       (s/put! s response))
                      (d/recur buffer'))))))))
        (fn [_]
          (s/close! s))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/clj-commons/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_goophi.core">goophi.core</li><li class="floating-toc-li" id="floating-toc_goophi.fs">goophi.fs</li><li class="floating-toc-li" id="floating-toc_goophi.redirect">goophi.redirect</li><li class="floating-toc-li" id="floating-toc_goophi.response">goophi.response</li><li class="floating-toc-li" id="floating-toc_goophi.routing">goophi.routing</li><li class="floating-toc-li" id="floating-toc_goophi.tcp">goophi.tcp</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
