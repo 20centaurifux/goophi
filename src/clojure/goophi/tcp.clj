@@ -6,7 +6,6 @@
             [manifold.stream :as s]))
 
 (defonce ^:private max-request 128)
-(defonce ^:private transfer-chunk-size 8192)
 (defonce ^:private timeout-millis 5000)
 
 (defn wrap-response
@@ -15,15 +14,6 @@
   [handler]
   (fn [req]
     (assoc req :response (handler req))))
-
-(defn- put-response!
-  [in out]
-  (when in
-    (d/loop [buffer (byte-array transfer-chunk-size)]
-      (let [available (rsp/take! in buffer)]
-        (when (pos? available)
-          (s/put! out (byte-array (take available buffer)))
-          (d/recur buffer))))))
 
 (defn- ->path
   [data]
@@ -63,8 +53,10 @@
                  (if (exceeds-maximum? buffer')
                    (s/put! s (rsp/menu-entity (goo/info "Request too long.")))
                    (if (seq r)
-                     (let [request' (assoc request :path (->path buffer'))]
-                       (put-response! (execute-handler handler request') s))
+                     (with-open [response (execute-handler handler
+                                                           (assoc request
+                                                                  :path (->path buffer')))]
+                       (s/put! s response))
                      (d/recur buffer'))))))))
        (fn [_]
          (s/close! s))))))

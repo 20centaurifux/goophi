@@ -12,7 +12,7 @@
 (defn- roundtrip
   [selector]
   (-> (get-contents base-dir selector :hostname hostname :port port)
-      rsp/dumps
+      rsp/print-text-stream
       with-out-str))
 
 (deftest directory-traversal

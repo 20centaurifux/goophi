@@ -4,45 +4,31 @@
   (:import goophi.core.Item
            goophi.textfileentity.TextfileEntityInputStream))
 
-(defprotocol Response
-  "Response data source."
-  (take! [in out]))
-
-(defn Response?
-  "Returns true if x is a Response."
-  [x]
-  (satisfies? Response x))
-
-(defn- dump
-  [response transform & {:keys [buffer-size] :or {buffer-size 8192}}]
+(defn- print-stream
+  [stream transform & {:keys [buffer-size] :or {buffer-size 8192}}]
   (loop [buffer (byte-array buffer-size)]
-    (let [available (take! response buffer)]
-      (when (>= available 0)
-        (-> (take available buffer)
-            byte-array
+    (let [available (.read stream buffer)]
+      (when (pos? available)
+        (-> (byte-array available buffer)
             transform
             print)
         (recur buffer)))))
 
-(defn dumps
-  "Reads response as string & prints it to *out*."
-  [response]
-  (dump response slurp))
+(defn print-text-stream
+  "Reads all contents of stream and & prints it to *out*."
+  [stream]
+  (print-stream stream slurp))
 
-(defn dumpx
-  "Reads response & prints hexdump to *out*."
-  [response & {:keys [columns] :or {columns 16}}]
-  (dump response
-        #(str (s/join " " (map (partial format "0x%02x") %))
-              \newline)
-        :buffer-size columns))
-
-(extend java.io.InputStream
-  Response
-  {:take! #(.read % %2)})
+(defn print-binary-stream
+  "Reads all contents of stream & prints hexdump to *out*."
+  [stream & {:keys [columns] :or {columns 16}}]
+  (print-stream stream
+                #(str (s/join " " (map (partial format "0x%02x") %))
+                      \newline)
+                :buffer-size columns))
 
 (defprotocol MenuEntityFactory
-  "Appends a period to the response."
+  "Adds a final line with a period."
   (menu-entity [in]))
 
 (extend-protocol MenuEntityFactory
@@ -54,7 +40,7 @@
     (menu-entity (str item))))
 
 (defprotocol TextfileEntityFactory
-  "Removes control characters and appends a period."
+  "Removes control characters and appends a final line with a period."
   (text-file-entity [source]))
 
 (extend-protocol TextfileEntityFactory
@@ -64,7 +50,7 @@
 
 (defprotocol BinaryFactory
   "Bypasses binary data."
-  (binary-entity [source]))
+  (binary-entity [in]))
 
 (extend-protocol BinaryFactory
   (Class/forName "[B")
