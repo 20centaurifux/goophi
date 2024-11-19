@@ -41,7 +41,7 @@ The routing module checks whether a path from the request map matches a pattern 
 	   []
 	   (menu-entity (info "hello world"))))
 
-	(dumps (hello-world (->request "/")))
+	(print-text-stream (hello-world (->request "/")))
 
 	-> ihello world    fake    (NULL)  0
 	-> .
@@ -54,7 +54,7 @@ Placeholders can also be used, which are bound to vars.
 	   [year month]
 	   (menu-entity (info (str year "/" month)))))
 
-	(dumps (hello-world-with-vars (->request "/blog/2024/11")))
+	(print-text-stream (hello-world-with-vars (->request "/blog/2024/11")))
 
 	-> i11/2024        fake    (NULL)  0
 	-> .
@@ -71,7 +71,7 @@ gooφ has a built-in filesystem module with gophermap support.
 	   [:as req]
 	   (get-contents "./example-pub" (:path req))))
 
-	(dumps (fs-example (->request "docs/hello.txt")))
+	(print-text-stream (fs-example (->request "docs/hello.txt")))
 
 	->   |\__/,|   (`\
 	->  _.|o o  |_   ) )
@@ -92,7 +92,7 @@ URLs are displayed on an HTML redirection page.
 	     (redirect url)
 	     (menu-entity (info "Not Found.")))))
 
-	(dumps (redirect-example (->request "URL:https://github.com/20centaurifux/goophi")))
+	(print-text-stream (redirect-example (->request "URL:https://github.com/20centaurifux/goophi")))
 
 	-> <!DOCTYPE html> ...
 
