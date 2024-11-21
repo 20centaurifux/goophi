@@ -9,9 +9,9 @@
 
 (defn- file-extension
   [filename]
-  (-> (s/split filename #"\.")
-      last
-      s/lower-case))
+  (some-> (re-matches #"(?i).*[^/]\.([a-z0-9]+)$" filename)
+          last
+          s/lower-case))
 
 (defn- map-extension
   [filename item-type-map]
