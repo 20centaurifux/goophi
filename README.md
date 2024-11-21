@@ -43,20 +43,20 @@ The routing module checks whether a path from the request map matches a pattern 
 
 	(print-text-stream (hello-world (->request "/")))
 
-	-> ihello world    fake    (NULL)  0
+	-> ihello world	fake	(NULL)	0
 	-> .
 
 Placeholders can also be used, which are bound to vars.
 
-	(def hello-world-with-vars
+	(def route-with-vars
 	  (route
-	   "/blog/:year/:month"
-	   [year month]
-	   (menu-entity (info (str year "/" month)))))
+	   "/manga/articles/:category"
+	   [category]
+	   (menu-entity (info (str "Articles from category " category)))))
 
-	(print-text-stream (hello-world-with-vars (->request "/blog/2024/11")))
+	(print-text-stream (route-with-vars (->request "/blog/articles/programming")))
 
-	-> i11/2024        fake    (NULL)  0
+	-> iArticles from category programming	fake	(NULL)	0
 	-> .
 
 ### filesystem module
@@ -92,7 +92,8 @@ URLs are displayed on an HTML redirection page.
 	     (redirect url)
 	     (menu-entity (info "Not Found.")))))
 
-	(print-text-stream (redirect-example (->request "URL:https://github.com/20centaurifux/goophi")))
+	(print-text-stream
+	 (redirect-example (->request "URL:https://dixieflatline.de")))
 
 	-> <!DOCTYPE html> ...
 
@@ -101,17 +102,18 @@ URLs are displayed on an HTML redirection page.
 Build Aleph compatible request handlers with the tcp module.
 
 	(require '[aleph.tcp :as tcp]
-	         '[goophi.tcp :refer [aleph-handler wrap-response]])
+	         '[goophi.tcp :refer [aleph-handler]])
 
 	(def my-routes
 	  (routes
 	   ("*"
 	   [:as req]
-	   (get-contents "./example-pub" (:path req)))))
+	   (or (get-contents "./example-pub" (:path req))
+	       (menu-entity (info "Not Found."))))))
 
 	(tcp/start-server
-	 (aleph-handler (wrap-response my-routes))
-	 {:port 8070})
+	 (aleph-handler my-routes)
+	 {:port 70})
 
 ## Middleware
 
@@ -127,9 +129,9 @@ Read or change the request map by composing a custom request handler.
 	    (handler req)))
 
 	(def my-app
-	  (-> (wrap-response my-routes)
+	  (-> my-routes
 	      log-request))
 
 	(def s (tcp/start-server
 	        (aleph-handler my-app)
-	        {:port 8070}))
+	        {:port 70}))
