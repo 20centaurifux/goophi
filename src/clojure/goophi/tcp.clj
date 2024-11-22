@@ -35,9 +35,9 @@
   (d/chain
    (s/put! s stream)
    (fn [_]
-       (s/close! s)
-       (.close stream))))
-           
+     (s/close! s)
+     (.close stream))))
+
 (defn aleph-handler
   "Creates an Aleph handler."
   [handler]
