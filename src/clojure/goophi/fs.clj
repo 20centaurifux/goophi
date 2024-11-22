@@ -120,8 +120,7 @@
   [base-dir path & {:keys [hostname port item-type-map]
                     :or {hostname "localhost" port 70 item-type-map {}}}]
   (let [file (io/file base-dir (normalize-path path))]
-    (if (is-child-path? base-dir (.getPath file))
+    (when (is-child-path? base-dir (.getPath file))
       (cond
         (.isDirectory file) (read-directory path file hostname port item-type-map)
-        (.isFile file) (read-file file item-type-map))
-      (rsp/menu-entity (goo/info "Access denied.")))))
+        (.isFile file) (read-file file item-type-map)))))

@@ -17,7 +17,9 @@
 
 (deftest directory-traversal
   (testing "directory traversal"
-    (is (some? (re-matches #"(?is)iaccess denied.*" (roundtrip "../"))))))
+    (is (nil? (get-contents base-dir "../")))
+    (is (some? (get-contents base-dir "docs/../")))
+    (is (nil? (get-contents base-dir "docs/../../")))))
 
 (deftest menu
   (testing "gophermap"
