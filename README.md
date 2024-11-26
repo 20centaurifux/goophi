@@ -90,7 +90,7 @@ URLs are displayed on an HTML redirection page.
 	   [:as req]
 	   (if-let [url (selector->url (:path req))]
 	     (redirect url)
-	     (menu-entity (info "Not Found.")))))
+	     (menu-entity (info "Not found.")))))
 
 	(print-text-stream
 	 (redirect-example (->request "URL:https://dixieflatline.de")))
@@ -109,7 +109,7 @@ Build Aleph compatible request handlers with the tcp module.
 	   ("*"
 	   [:as req]
 	   (or (get-contents "./example-pub" (:path req))
-	       (menu-entity (info "Not Found."))))))
+	       (menu-entity (info "Not found."))))))
 
 	(tcp/start-server
 	 (aleph-handler my-routes)

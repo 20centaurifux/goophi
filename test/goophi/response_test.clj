@@ -1,11 +1,9 @@
 (ns goophi.response-test
-  (:require [clojure.java.io :as io]
-            [clojure.string :as s]
+  (:require [clojure.string :as s]
             [clojure.test :refer [deftest testing is]]
             [goophi.core :refer [info]]
-            [goophi.response :as rsp]))
-
-(defonce ^:private base-dir "./example-pub")
+            [goophi.response :as rsp]
+            [goophi.test-utils :as utils]))
 
 (defn- str->stream
   [text]
@@ -43,10 +41,10 @@
 
 (deftest binary-files
   (testing "binary entity"
-    (with-open [e (io/input-stream (io/file base-dir "docs" "world.jpg"))
-                e' (rsp/binary-entity e)]
-      (= (-> (rsp/print-binary-stream e) with-out-str)
-         (-> (rsp/print-binary-stream e') with-out-str)))))
+    (with-open [e (utils/open-binary-file)
+                e' (rsp/binary-entity (utils/open-binary-file))]
+      (is (= (-> (rsp/print-binary-stream e) with-out-str)
+             (-> (rsp/print-binary-stream e') with-out-str))))))
 
 (deftest text-files
   (testing "last line"
