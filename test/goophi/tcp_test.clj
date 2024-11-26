@@ -7,9 +7,17 @@
             [clojure.test.check.properties :as prop]
             [goophi.response :as rsp]
             [goophi.tcp :refer [aleph-handler]]
+            [goophi.test-utils :as utils]
+            [manifold.deferred :as d]
             [manifold.stream :as s]))
 
+;;; gopher server
+
 (defonce ^:private port 7070)
+
+(defn- start-server
+  [handler port]
+  (tcp/start-server (aleph-handler handler) {:port port}))
 
 ;;; gopher client
 
@@ -21,73 +29,99 @@
   [c selector]
   @(s/put! c (str selector "\r\n")))
 
-(defn- take-response!
+(defn- take!
+  [source]
+  @(with-open [buffer (java.io.ByteArrayOutputStream.)]
+     (d/chain
+      (s/consume (fn [msg]
+                   (.write buffer msg))
+                 source)
+      (fn [_]
+        (.toByteArray buffer)))))
+
+(defn- take-str!
   [c]
-  (String. @(s/take! c)))
+  (String. (take! c)))
+
+;;; tests
 
 (defonce ^:private selector-gen
   (gen/fmap #(str/trimr (str "/" %)) gen/string-ascii))
 
-;;; gopher server
-
-(defn- start-server
-  [handler port]
-  (tcp/start-server (aleph-handler handler) {:port port}))
-
-;;; tests
+(defn- return-selector
+  [req]
+  (-> req :path .getBytes java.io.ByteArrayInputStream.))
 
 (deftest tcp-server
-  (letfn [(return-selector [req]
-            (-> req :path .getBytes java.io.ByteArrayInputStream.))]
-    (testing "roundtrip"
-      (let [s (start-server return-selector port)
-            property (prop/for-all [selector selector-gen]
-                                   (let [c (local-client port)]
+  (testing "roundtrip"
+    (with-open [_ (start-server return-selector port)]
+      (let [property (prop/for-all [selector selector-gen]
+                                   (with-open [c (local-client port)]
                                      (put-request! c selector)
-                                     (= selector (take-response! c))))]
-        (is (:result (tc/quick-check 100 property)))
-        (.close s)))
+                                     (= selector (take-str! c))))]
+        (is (:result (tc/quick-check 100 property))))))
 
-    (testing "client timeout"
-      (with-redefs [goophi.tcp/timeout-millis 500]
-        (let [s (start-server return-selector port)
-              c (local-client port)
-              response (take-response! c)
+  (testing "client timeout"
+    (with-redefs [goophi.tcp/timeout-millis 500]
+      (with-open [_ (start-server return-selector port)
+                  c (local-client port)]
+        (let [response (take-str! c)
               lines (str/split-lines response)]
           (is (= 2 (count lines)))
           (is (= "iConnection timeout.	fake	(NULL)	0" (lines 0)))
-          (is (= "." (lines 1)))
-          (.close s))))
+          (is (= "." (lines 1)))))))
 
-    (testing "handler throws exception"
-      (let [s (start-server (fn [_]
-                              (throw (Exception.)))
-                            port)
-            c (local-client port)]
-        (put-request! c "/")
-        (let [response (take-response! c)
-              lines (str/split-lines response)]
-          (is (= 2 (count lines)))
-          (is (= "iInternal Server Error.	fake	(NULL)	0" (lines 0)))
-          (is (= "." (lines 1)))
-          (.close s))))
+  (testing "handler throws exception"
+    (with-open [_ (start-server (fn [_]
+                                  (throw (Exception.)))
+                                port)
+                c (local-client port)]
+      (put-request! c "/")
+      (let [response (take-str! c)
+            lines (str/split-lines response)]
+        (is (= 2 (count lines)))
+        (is (= "iInternal server error.	fake	(NULL)	0" (lines 0)))
+        (is (= "." (lines 1))))))
 
-    (testing "handler returns nil"
-      (let [s (start-server (constantly nil) port)
-            c (local-client port)]
-        (put-request! c "/")
-        (let [response (take-response! c)
-              lines (str/split-lines response)]
-          (is (= 2 (count lines)))
-          (is (= "iNot Found.	fake	(NULL)	0" (lines 0)))
-          (is (= "." (lines 1)))
-          (.close s))))
+  (testing "handler returns nil"
+    (with-open [_ (start-server (constantly nil) port)
+                c (local-client port)]
+      (put-request! c "/")
+      (let [response (take-str! c)
+            lines (str/split-lines response)]
+        (is (= 2 (count lines)))
+        (is (= "iNot found.	fake	(NULL)	0" (lines 0)))
+        (is (= "." (lines 1))))))
 
-    (testing "handler returns empty response"
-      (let [s (start-server (fn [_]
-                              (rsp/binary-entity (byte-array 0)))
-                            port)
-            c (local-client port)]
-        (put-request! c "/")
-        (is (nil? @(s/take! c)))
-        (.close s)))))
+  (testing "handler returns empty response"
+    (with-open [_ (start-server (fn [_]
+                                  (rsp/binary-entity (byte-array 0)))
+                                port)
+                c (local-client port)]
+      (put-request! c "/")
+      (is (nil? @(s/take! c))))))
+
+(deftest binary-transfer
+  (testing "roundtrip"
+    (with-open [_ (start-server (fn [_]
+                                  (rsp/binary-entity (utils/open-binary-file)))
+                                port)
+                c (local-client port)
+                stream (utils/open-binary-file)]
+      (put-request! c "/")
+      (let [expected (utils/stream->byte-array stream)
+            actual (take! c)]
+        (is (= (seq expected) (seq actual)))))))
+
+(deftest text-transfer
+  (testing "roundtrip"
+    (with-open [_ (start-server (fn [_]
+                                  (rsp/text-file-entity (utils/open-text-file)))
+                                port)
+                c (local-client port)
+                stream (utils/open-text-file)]
+      (put-request! c "/")
+      (let [contents (slurp stream)
+            expected (str (str/replace contents "\n" "\r\n") ".\r\n")
+            actual (take-str! c)]
+        (is (= expected actual))))))

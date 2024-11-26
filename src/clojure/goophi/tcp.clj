@@ -7,6 +7,7 @@
 
 (defonce ^:private max-request 128)
 (defonce ^:private timeout-millis 5000)
+(defonce ^:private buffer-size 8192)
 
 (defn- ->path
   [data]
@@ -27,16 +28,27 @@
     (let [response (handler req)]
       (if response
         response
-        (rsp/menu-entity (goo/info "Not Found."))))
-    (catch Exception _ (rsp/menu-entity (goo/info "Internal Server Error.")))))
+        (rsp/menu-entity (goo/info "Not found."))))
+    (catch Exception _ (rsp/menu-entity (goo/info "Internal server error.")))))
+
+(defn- try-close!
+  [s]
+  (try
+    (s/close! s)
+    (catch Exception _)))
 
 (defn- put-stream!
   [s stream]
-  (d/chain
-   (s/put! s stream)
-   (fn [_]
-     (s/close! s)
-     (.close stream))))
+  (let [buffer (byte-array buffer-size)]
+    (d/chain
+     (d/loop []
+       (let [available (.read stream buffer)]
+         (when (pos? available)
+           (s/put! s (byte-array available buffer))
+           (d/recur))))
+     (fn [_]
+       (try-close! s)
+       (try-close! stream)))))
 
 (defn aleph-handler
   "Creates an Aleph handler."
