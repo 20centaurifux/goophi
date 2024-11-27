@@ -1,6 +1,6 @@
 (ns goophi.redirect
   (:require [clojure.java.io :as io]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [hiccup.page :as hic]))
 
 (defn- page
@@ -24,7 +24,7 @@
   "Extracts url from a URL selector."
   [selector]
   (let [url (subs selector 4)]
-    (when-not (s/blank? url)
+    (when-not (str/blank? url)
       (try
         (io/as-url url)
         (catch Exception _)))))

@@ -1,8 +1,8 @@
 (ns goophi.fs
   (:require [clojure.java.io :as io]
-            [clojure.string :as s]
-            [goophi.core :as goo]
-            [goophi.response :as rsp])
+            [clojure.string :as str]
+            [goophi.core :refer [->Item info]]
+            [goophi.response :refer [binary-entity menu-entity text-file-entity]])
   (:import java.io.FileInputStream
            java.net.URLConnection
            java.nio.file.Paths))
@@ -11,7 +11,7 @@
   [filename]
   (some-> (re-matches #"(?i).*[^/]\.([a-z0-9]+)$" filename)
           last
-          s/lower-case))
+          str/lower-case))
 
 (defn- map-extension
   [filename item-type-map]
@@ -24,8 +24,8 @@
   [filename]
   (let [mime (or (URLConnection/guessContentTypeFromName filename) "")]
     (cond
-      (s/starts-with? mime "text/") "0"
-      (s/starts-with? mime "image/") "i")))
+      (str/starts-with? mime "text/") "0"
+      (str/starts-with? mime "image/") "i")))
 
 (defn- guess-file-type
   [filename item-type-map]
@@ -41,26 +41,26 @@
 
 (defn- ->selector
   [parent filename]
-  (let [rtrimmed (s/replace parent #"/$" "")
+  (let [rtrimmed (str/replace parent #"/$" "")
         selector (str rtrimmed "/" filename)]
     (cond->> selector
-      (not (s/starts-with? selector "/")) (str "/"))))
+      (not (str/starts-with? selector "/")) (str "/"))))
 
 (defn- file->item
   [parent ^java.io.File file hostname port item-type-map]
-  (goo/->Item (map-file-type file item-type-map)
-              (.getName file)
-              (->selector parent (.getName file))
-              hostname
-              port))
+  (->Item (map-file-type file item-type-map)
+          (.getName file)
+          (->selector parent (.getName file))
+          hostname
+          port))
 
 (defn- list-directory
   [selector ^java.io.File dir hostname port item-type-map]
   (->> (.listFiles dir)
        sort
        (map #(str (file->item selector % hostname port item-type-map)))
-       s/join
-       rsp/menu-entity))
+       str/join
+       menu-entity))
 
 (defn- transform-gophermap-parts
   [parts keywords]
@@ -70,17 +70,17 @@
 (defn- convert-line
   [line keywords]
   (if-let [match (re-matches #"^(?i)([a-z0-9\+:;<])(.+)\t(.+)\t(.+)\t(\d+|@port)$"
-                             (s/trim line))]
-    (apply goo/->Item (transform-gophermap-parts (rest match) keywords))
-    (goo/info line)))
+                             (str/trim line))]
+    (apply ->Item (transform-gophermap-parts (rest match) keywords))
+    (info line)))
 
 (defn- read-gophermap
   [file hostname port]
   (with-open [rdr (io/reader file)]
     (->> (line-seq rdr)
          (map (comp str #(convert-line % {"@hostname" hostname "@port" port})))
-         s/join
-         rsp/menu-entity)))
+         str/join
+         menu-entity)))
 
 (defn- read-directory
   [selector dir hostname port item-type-map]
@@ -93,8 +93,8 @@
   [^java.io.File file item-type-map]
   (let [in (FileInputStream. file)]
     (if (= "0" (guess-file-type (.getPath file) item-type-map))
-      (rsp/text-file-entity in)
-      (rsp/binary-entity in))))
+      (text-file-entity in)
+      (binary-entity in))))
 
 (defn- ->Path
   ^java.nio.file.Path [path]
@@ -112,8 +112,8 @@
 (defn- normalize-path
   [path]
   (-> (or path "")
-      (s/replace #"^/" "./")
-      (s/replace #"gophermap$" "")))
+      (str/replace #"^/" "./")
+      (str/replace #"gophermap$" "")))
 
 (defn get-contents
   "Returns a gopher menu or file stream."
