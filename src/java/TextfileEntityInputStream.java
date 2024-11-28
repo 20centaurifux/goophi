@@ -11,6 +11,16 @@ public final class TextfileEntityInputStream extends FilterInputStream
 	public static int TABSTOP = 4;
 	public static int BUFFERSIZE = 8192;
 
+	private enum State
+	{
+		NEWLINE,
+		FILL,
+		CLOSED
+	}
+
+	private State state = State.NEWLINE;
+	private ByteArrayOutputStream out = new ByteArrayOutputStream();
+
 	public TextfileEntityInputStream(InputStream in)
 	{
 		super(in);
@@ -52,11 +62,15 @@ public final class TextfileEntityInputStream extends FilterInputStream
 		if(out.size() > 0)
 		{
 			byte[] buffer = out.toByteArray();
-			
+
 			b = buffer[0];
-			
+
 			out.reset();
-			out.write(buffer, 1, buffer.length - 1);
+
+			if(buffer.length > 1)
+			{
+				out.write(buffer, 1, buffer.length - 1);
+			}
 		}
 
 		return b;
@@ -65,53 +79,36 @@ public final class TextfileEntityInputStream extends FilterInputStream
 	@Override
 	public int read(byte[] dst) throws IOException
 	{
-		int read = -1;
-		
-		fillBuffer();
-
-		byte[] buffer = out.toByteArray();
-
-		if(buffer.length > 0)
-		{
-			read = Math.min(buffer.length, dst.length);
-
-			System.arraycopy(buffer, 0, dst, 0, read);
-
-			out.reset();
-
-			int bytesLeft = buffer.length - read;
-
-			out.write(buffer, read, bytesLeft);
-		}
-
-		return read;
+		return read(dst, 0, dst.length);
 	}
 
 	@Override
 	public int read(byte[] dst, int offset, int len) throws IOException
 	{
-		int read = -1;
+		int read = 0;
 
-		fillBuffer();
-
-		byte[] buffer = out.toByteArray();
-
-		if(buffer.length > 0)
+		if(len > 0)
 		{
-			if(len > buffer.length)
+			fillBuffer();
+
+			if(out.size() > 0)
 			{
-				throw new IOException("Not enough input available.");
+				byte[] buffer = out.toByteArray();
+
+				read = Math.min(buffer.length, len);
+
+				System.arraycopy(buffer, 0, dst, offset, read);
+
+				out.reset();
+
+				int bytesLeft = buffer.length - read;
+
+				out.write(buffer, read, bytesLeft);
 			}
-
-			read = len;
-
-			System.arraycopy(buffer, 0, dst, offset, read);
-
-			out.reset();
-
-			int bytesLeft = buffer.length - read;
-
-			out.write(buffer, read, bytesLeft);
+			else
+			{
+				read = -1;
+			}
 		}
 
 		return read;
@@ -136,16 +133,6 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 		return skipped;
 	}
-
-	private enum State
-	{
-		NEWLINE,
-		FILL,
-		CLOSED
-	}
-
-	private State state = State.NEWLINE;
-	private ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 	private void fillBuffer() throws IOException
 	{

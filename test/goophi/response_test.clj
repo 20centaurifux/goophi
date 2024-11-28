@@ -24,7 +24,7 @@
     (is (instance? java.io.InputStream
                    (rsp/binary-entity (byte-array [1 3 3 7]))))))
 
-(deftest dump
+(deftest print-stream
   (testing "string"
     (let [dump (-> (str->stream "hello world")
                    rsp/print-text-stream
@@ -78,6 +78,15 @@
         (is (= 2 (count lines)))
         (is (not (.contains (first lines) "\t")))
         (is (some? (re-matches #"hello\s+world" (first lines))))
+        (is (= "." (second lines)))))
+
+    (testing "slurp"
+      (let [lines (-> (str->stream "hello world")
+                      rsp/text-file-entity
+                      slurp
+                      (s/split #"\r\n"))]
+        (is (= 2 (count lines)))
+        (is (= "hello world" (first lines)))
         (is (= "." (second lines)))))))
 
 (deftest menu-entities
