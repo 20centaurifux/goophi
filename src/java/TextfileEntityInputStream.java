@@ -9,12 +9,13 @@ import java.util.Arrays;
 public final class TextfileEntityInputStream extends FilterInputStream
 {
 	public static int TABSTOP = 4;
-	public static int BUFFERSIZE = 8192;
+	public static int BUFFERSIZE = 81920;
 
 	private enum State
 	{
 		NEWLINE,
 		FILL,
+		FILL_AND_STRIP,
 		CLOSED
 	}
 
@@ -182,7 +183,7 @@ public final class TextfileEntityInputStream extends FilterInputStream
 		{
 			endOfLine();
 		}
-		else
+		else if(state == State.FILL || (state == State.FILL_AND_STRIP && b != '.'))
 		{
 			write(b);
 		}
@@ -193,19 +194,18 @@ public final class TextfileEntityInputStream extends FilterInputStream
 		if(b == '.')
 		{
 			out.write("..".getBytes());
+			state = State.FILL_AND_STRIP;
 		}
 		else
 		{
 			write(b);
+			state = State.FILL;
 		}
-
-		state = State.FILL;
 	}
 
 	void endOfLine() throws IOException
 	{
 		out.write("\r\n".getBytes());
-		
 		state = State.NEWLINE;
 	}
 
@@ -226,6 +226,8 @@ public final class TextfileEntityInputStream extends FilterInputStream
 				out.write(b);
 			}
 		}
+
+		state = State.FILL;
 	}
 
 	void expandTab() throws IOException

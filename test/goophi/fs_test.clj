@@ -24,7 +24,7 @@
 (deftest menu
   (testing "gophermap"
     (doseq [selector ["" "gophermap"]]
-      (let [lines (s/split (roundtrip selector) #"\r\n")]
+      (let [lines (s/split-lines (roundtrip selector))]
         (is (= 4 (count lines)))
         (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
         (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
@@ -33,7 +33,7 @@
         (is (= "." (nth lines 3))))))
 
   (testing "listing"
-    (let [lines (s/split (roundtrip "docs") #"\r\n")]
+    (let [lines (s/split-lines (roundtrip "docs"))]
       (is (= 3 (count lines)))
       (is (= (format "0hello.txt\t/docs/hello.txt\t%s\t%d" hostname port)
              (nth lines 0)))
@@ -61,11 +61,9 @@
       (is (= (stream->bytes r) (stream->bytes r')))))
 
   (testing "text"
-    (let [lines (s/split (slurp
-                          (io/file base-dir "docs" "hello.txt"))
-                         #"\n")
-          lines' (s/split (roundtrip "docs/hello.txt")
-                          #"\r\n")]
+    (let [lines (s/split-lines (slurp
+                          (io/file base-dir "docs" "hello.txt")))
+          lines' (s/split-lines (roundtrip "docs/hello.txt"))]
       (is (= 3 (count lines)))
       (is (= 4 (count lines')))
       (is (= lines (take 3 lines')))
