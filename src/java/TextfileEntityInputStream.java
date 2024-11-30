@@ -13,14 +13,14 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 	private enum State
 	{
-		NEWLINE,
+		BEGIN_NEWLINE,
 		FILL,
-		FILL_AND_STRIP,
+		STRIP_AND_FILL,
 		CLOSED
 	}
 
-	private State state = State.NEWLINE;
-	private ByteArrayOutputStream out = new ByteArrayOutputStream();
+	private State state = State.BEGIN_NEWLINE;
+	private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 	public TextfileEntityInputStream(InputStream in)
 	{
@@ -124,21 +124,35 @@ public final class TextfileEntityInputStream extends FilterInputStream
 	@Override
 	public long skip(long n) throws IOException
 	{
-		long skipped = Math.min(n, out.size());
+        fillBuffer();
 
-		byte[] original = out.toByteArray();
-		byte[] bytesLeft = Arrays.copyOf(original, (int)skipped);
+        long skipped = Math.min(n, out.size());
 
-		out.reset();
-		out.write(bytesLeft);
+        if(skipped < out.size())
+        {
+            byte[] original = out.toByteArray();
+            byte[] bytesLeft = Arrays.copyOfRange(original, (int)skipped, original.length);
+
+            out.reset();
+            out.write(bytesLeft);
+        }
+        else
+        {
+            out.reset();
+        }
 
 		return skipped;
 	}
 
 	private void fillBuffer() throws IOException
 	{
-		while(state != State.CLOSED && out.size() < BUFFERSIZE)
+		while(state != State.CLOSED)
 		{
+			if(out.size() > BUFFERSIZE)
+			{
+				throw new IOException("Buffer overflow.");
+			}
+
 			step();
 		}
 	}
@@ -160,32 +174,39 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 	private void endOfFile() throws IOException
 	{
-		if (state != State.NEWLINE)
+		if (state != State.BEGIN_NEWLINE)
 		{
-			out.write("\r\n".getBytes());
+			writeNewLine();
 		}
 
-		state = State.CLOSED;
+		out.write('.');
+		writeNewLine();
 
 		in.close();
-		out.write(".\r\n".getBytes());
+
+		state = State.CLOSED;
 	}
 
 	void writeNextByte() throws IOException
 	{
 		int b = in.read();
-		
-		if(state == State.NEWLINE)
+
+		switch(state)
 		{
-			beginNewLine(b);
-		}
-		else if(b == '\n')
-		{
-			endOfLine();
-		}
-		else if(state == State.FILL || (state == State.FILL_AND_STRIP && b != '.'))
-		{
-			write(b);
+			case State.BEGIN_NEWLINE:
+				beginNewLine(b);
+				break;
+
+			case State.FILL:
+				fillLine(b);
+				break;
+
+			case State.STRIP_AND_FILL:
+				stripAndFillLine(b);
+				break;
+
+			default:
+				throw new IllegalStateException();
 		}
 	}
 
@@ -193,25 +214,43 @@ public final class TextfileEntityInputStream extends FilterInputStream
 	{
 		if(b == '.')
 		{
-			out.write("..".getBytes());
-			state = State.FILL_AND_STRIP;
+			out.write('.');
+			out.write('.');
+
+			state = State.STRIP_AND_FILL;
 		}
 		else
 		{
 			write(b);
+
 			state = State.FILL;
 		}
 	}
 
-	void endOfLine() throws IOException
+	void fillLine(int b) throws IOException
 	{
-		out.write("\r\n".getBytes());
-		state = State.NEWLINE;
+		write(b);
+	}
+
+	void stripAndFillLine(int b) throws IOException
+	{
+		if(b != '.')
+		{
+			write(b);
+
+			state = State.FILL;
+		}
 	}
 
 	void write(int b) throws IOException
 	{
-		if(b == '\t')
+		if(b == '\n')
+		{
+			writeNewLine();
+
+			state = State.BEGIN_NEWLINE;
+		}
+		else if(b == '\t')
 		{
 			expandTab();
 		}
@@ -226,8 +265,12 @@ public final class TextfileEntityInputStream extends FilterInputStream
 				out.write(b);
 			}
 		}
+	}
 
-		state = State.FILL;
+	void writeNewLine() throws IOException
+	{
+		out.write('\r');
+		out.write('\n');
 	}
 
 	void expandTab() throws IOException
