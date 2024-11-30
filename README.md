@@ -50,7 +50,7 @@ Placeholders can also be used, which are bound to vars.
 
 	(def route-with-vars
 	  (route
-	   "/manga/articles/:category"
+	   "/blog/articles/:category"
 	   [category]
 	   (menu-entity (info (str "Articles from category " category)))))
 
