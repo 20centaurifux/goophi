@@ -193,15 +193,15 @@ public final class TextfileEntityInputStream extends FilterInputStream
 
 		switch(state)
 		{
-			case State.BEGIN_NEWLINE:
+			case BEGIN_NEWLINE:
 				beginNewLine(b);
 				break;
 
-			case State.FILL:
+			case FILL:
 				fillLine(b);
 				break;
 
-			case State.STRIP_AND_FILL:
+			case STRIP_AND_FILL:
 				stripAndFillLine(b);
 				break;
 
