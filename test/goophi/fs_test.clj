@@ -3,7 +3,8 @@
             [clojure.string :as s]
             [clojure.test :refer [deftest testing is]]
             [goophi.fs :refer [get-contents]]
-            [goophi.response :as rsp]))
+            [goophi.response :as rsp]
+            [goophi.test-utils]))
 
 (defonce ^:private base-dir "./example-pub")
 (defonce ^:private hostname "example.org")
@@ -26,20 +27,20 @@
     (doseq [selector ["" "gophermap"]]
       (let [lines (s/split-lines (roundtrip selector))]
         (is (= 4 (count lines)))
-        (is (= "iWelcome!\tfake\t(NULL)\t0" (nth lines 0)))
-        (is (= "i\tfake\t(NULL)\t0" (nth lines 1)))
+        (is (= "iWelcome!\tfake\t(NULL)\t0" (lines 0)))
+        (is (= "i\tfake\t(NULL)\t0" (lines 1)))
         (is (= (format "1docs\tdocs\t%s\t%d" hostname port)
-               (nth lines 2)))
-        (is (= "." (nth lines 3))))))
+               (lines 2)))
+        (is (= "." (lines 3))))))
 
   (testing "listing"
     (let [lines (s/split-lines (roundtrip "docs"))]
       (is (= 3 (count lines)))
       (is (= (format "0hello.txt\t/docs/hello.txt\t%s\t%d" hostname port)
-             (nth lines 0)))
+             (lines 0)))
       (is (= (format "iworld.jpg\t/docs/world.jpg\t%s\t%d" hostname port)
-             (nth lines 1)))
-      (is (= "." (nth lines 2))))))
+             (lines 1)))
+      (is (= "." (lines 2))))))
 
 (deftest not-found
   (testing "directory not found"
@@ -62,7 +63,7 @@
 
   (testing "text"
     (let [lines (s/split-lines (slurp
-                          (io/file base-dir "docs" "hello.txt")))
+                                (io/file base-dir "docs" "hello.txt")))
           lines' (s/split-lines (roundtrip "docs/hello.txt"))]
       (is (= 3 (count lines)))
       (is (= 4 (count lines')))

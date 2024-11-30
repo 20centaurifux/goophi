@@ -64,10 +64,10 @@
                       with-out-str
                       s/split-lines)]
         (is (= 4 (count lines)))
-        (is (= "hello." (nth lines 0)))
-        (is (= ".." (nth lines 1)))
-        (is (= "wor.ld" (nth lines 2)))
-        (is (= "." (nth lines 3)))))
+        (is (= "hello." (lines 0)))
+        (is (= ".." (lines 1)))
+        (is (= "wor.ld" (lines 2)))
+        (is (= "." (lines 3)))))
 
     (testing "strip extra periods"
       (let [lines (-> (str->stream "hello.\r\n...\r\nwor.ld")
@@ -76,10 +76,10 @@
                       with-out-str
                       s/split-lines)]
         (is (= 4 (count lines)))
-        (is (= "hello." (nth lines 0)))
-        (is (= ".." (nth lines 1)))
-        (is (= "wor.ld" (nth lines 2)))
-        (is (= "." (nth lines 3)))))
+        (is (= "hello." (lines 0)))
+        (is (= ".." (lines 1)))
+        (is (= "wor.ld" (lines 2)))
+        (is (= "." (lines 3)))))
 
     (testing "preserve line break"
       (let [lines (-> (str->stream "hello\r\n\r\n\r\nworld")
@@ -88,11 +88,11 @@
                       with-out-str
                       s/split-lines)]
         (is (= 5 (count lines)))
-        (is (= "hello" (nth lines 0)))
-        (is (= "" (nth lines 1)))
-        (is (= "" (nth lines 2)))
-        (is (= "world" (nth lines 3)))
-        (is (= "." (nth lines 4)))))
+        (is (= "hello" (lines 0)))
+        (is (= "" (lines 1)))
+        (is (= "" (lines 2)))
+        (is (= "world" (lines 3)))
+        (is (= "." (lines 4)))))
 
     (testing "replace tab"
       (let [lines (-> (str->stream "hello\tworld")
