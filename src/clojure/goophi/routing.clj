@@ -52,11 +52,11 @@
   Returns a map containing path, query and matched parameters on
   success."
   [route request]
-  (when-let [request' (g/parse-request request)]
-    (when-let [match (re-matches (:regex route) (first request'))]
-      {:path (first request')
-       :query (second request')
-       :params (into (sorted-map) (zipmap (:params route) (rest match)))})))
+  (when-let [[path query] (g/parse-request request)]
+    (when-let [match (re-matches (:regex route) path)]
+      {:path path
+       :query query
+       :params (zipmap (:params route) (rest match))})))
 
 (defn- split-vars
   ([vars]
@@ -91,12 +91,10 @@
         [param-bindings# req-bindings#] (split-vars vars)]
     `(fn [req#]
        (when-let [match# (matches ~r# (:path req#))]
-         (let [~param-bindings# (take
-                                 ~(count param-bindings#)
-                                 (vals (:params match#)))
-               ~req-bindings# (repeat
-                               ~(count req-bindings#)
-                               (merge req# match#))]
+         (let [~param-bindings# (mapv #(get-in match# [:params %])
+                                      ~(mapv keyword param-bindings#))
+               ~req-bindings# (repeat ~(count req-bindings#)
+                                      (merge req# match#))]
            (do ~@body))))))
 
 (defmacro routes
